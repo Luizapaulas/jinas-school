@@ -21,9 +21,10 @@ O site é estático (só HTML/JS) e fica hospedado de graça no **GitHub Pages**
 1. Entre em <https://supabase.com>, crie uma conta e clique em **New project**.
 2. Dê um nome (ex.: `jinas-school`), crie uma senha do banco e escolha a região **South America (São Paulo)**.
 3. Quando o projeto abrir, vá em **SQL Editor → New query**, cole todo o conteúdo de `supabase/schema.sql` e clique em **Run**.
-4. Vá em **Project Settings → API** e copie:
-   - **Project URL**
-   - **anon public** key
+4. Em **Authentication → Sign In / Providers → Email**:
+   - deixe **Enable Email provider** e **Allow new users to sign up** ligados (o site cria as contas por aí; o banco recusa qualquer cadastro sem convite da escola);
+   - **desligue "Confirm email"**, para a senha provisória funcionar na hora.
+5. Vá em **Project Settings → API** e copie a **Project URL** e a **anon public** key.
 
 ## 2. Colar as chaves no site
 
@@ -34,7 +35,7 @@ SUPABASE_URL: "https://SEU-PROJETO.supabase.co",
 SUPABASE_ANON_KEY: "COLE_AQUI_A_ANON_PUBLIC_KEY",
 ```
 
-> A *anon key* pode ficar pública. Quem protege os dados são as regras (RLS) do `schema.sql`: cada aluno só enxerga o que é dele. **Nunca** coloque a *service_role key* no site.
+> A *anon key* pode ficar pública: quem protege os dados são as regras do `schema.sql`. **Nunca** coloque a *service_role key* no site.
 
 ## 3. Publicar no GitHub Pages
 
@@ -44,48 +45,41 @@ SUPABASE_ANON_KEY: "COLE_AQUI_A_ANON_PUBLIC_KEY",
 
 ## 4. Avisar o Supabase qual é o endereço do site
 
-Em **Authentication → URL Configuration**:
+Em **Authentication → URL Configuration**, coloque o endereço do site em **Site URL** e em **Redirect URLs**. Isso faz o link de "Esqueci minha senha" voltar para o seu site.
 
-- **Site URL**: `https://SEU-USUARIO.github.io/NOME-DO-REPO/`
-- **Redirect URLs**: adicione o mesmo endereço.
+## 5. Criar a primeira conta (administração)
 
-Isso faz os links de confirmação de e-mail e de "esqueci minha senha" voltarem para o seu site.
+Em **Authentication → Users → Add user → Create new user**, coloque seu e-mail e uma senha e marque **Auto Confirm User**. A **primeira** conta criada vira **administração** automaticamente. Depois disso, todas as outras contas são criadas pelo próprio site.
 
-## 5. Funções: aluno, professor e administração
+## Como funciona o acesso
 
-Toda conta nova nasce como **aluno**. Para dar a primeira conta de administração, rode no **SQL Editor** (troque o e-mail):
-
-```sql
-update public.profiles set role = 'admin' where email = 'diretora@exemplo.com';
-```
-
-Depois disso, quem é da administração muda a função das outras contas direto na página inicial do site (tabela **Contas da escola**).
+- **Entrar:** só e-mail e senha. Não existe cadastro aberto: quem cria as contas é a escola.
+- **Criar acesso** (página inicial, depois de entrar):
+  - **Professor(a)** cria contas de **alunos**.
+  - **Administração** cria contas de alunos, professores e administração, e muda a função de qualquer conta na tabela **Contas da escola**.
+- A conta nasce com uma **senha provisória**. No primeiro acesso o site obriga a pessoa a criar a própria senha.
+- **Turmas:** ao criar (ou depois, na tabela) escolha o **nível do Español** e a **turma do English** do aluno. Ao entrar, ele já vê as turmas dele.
+- **Español:** o aluno entra direto no nível dele, sem outra senha. A professora vê o aluno no *Panel de la profesora* automaticamente e pode mudar o nível por lá também.
+- **English:** as unidades abrem com o **código de acesso da família** (ex.: `LION-AB12-CD34`), gerado pela gestão no *Management Desk* do English. Coloque o código no cadastro do aluno; se o aluno digitar o código uma vez no English, ele também fica salvo na conta.
+- **Esqueceu a senha:** o próprio aluno usa **Esqueci minha senha** e recebe um link por e-mail.
 
 | Função | O que pode |
 |---|---|
-| Aluno(a) | estudar, comentar no mural, entregar tarefas |
-| Professor(a) | painel da professora no Español (criar alunos, temas, tarefas, dar notas) e Teacher Desk no English |
-| Administração | tudo do professor + gestão do English + mudar funções |
+| Aluno(a) | estudar nas turmas dele, comentar no mural, entregar tarefas |
+| Professor(a) | criar alunos e definir turmas; *Panel de la profesora* no Español; *Teacher Desk* no English |
+| Administração | tudo do professor + criar professores e administração, mudar funções, *Management Desk* do English, importar dados |
 
-### Español: como dar acesso a um aluno
-1. O aluno cria a conta na página inicial.
-2. A professora entra no **Panel de la profesora → Alumnos** e cria um usuário, senha e nível para ele.
-3. O aluno abre o Español e digita esse usuário e senha uma vez. A partir daí só vê o nível dele.
+## Chaves das aulas do English
 
-### English: códigos de família e de professor
-O English usa códigos (ex.: `LION-AB12-CD34`) criados pela gestão no **Management Desk**. As lições do English são **criptografadas** e só abrem com as chaves da escola (ver abaixo).
+As unidades do English são **criptografadas** dentro do arquivo. As chaves que as abrem ficavam no banco do site original no Claude (documentos `admin/owner` e `school/keys`), junto com famílias, professores e recados. Sem elas, as unidades não abrem.
 
-> ⚠️ **Chaves do English.** As chaves que destravam as unidades estavam guardadas no banco do site original no Claude, não no arquivo da página. Sem elas, a gestão vê a mensagem *"The school database is not set up yet"* e as unidades não abrem. É preciso importar essas chaves para o Supabase (tabela `site_docs`, documentos `admin/owner` e `school/keys`).
+Para trazer: quem é **dono(a) do site original** pede ao Claude, na conta dele(a), para exportar o banco do artifact *English w/ School* em JSON no formato `{ "caminho/do/documento": { ...dados... } }`. Depois, quem é da administração entra no site e usa **Importar dados do English** na página inicial.
 
-## Opções úteis no Supabase
-
-- **Authentication → Providers → Email → Confirm email**: deixe ligado para exigir confirmação por e-mail, ou desligue para o aluno entrar direto após o cadastro.
-- **Authentication → Users**: ver, bloquear ou apagar alunos.
-- **Table Editor → site_docs**: ver os dados das plataformas (alunos, temas, tarefas, notas, comentários).
+> Esse arquivo contém a chave mestra das aulas: **não coloque no GitHub** e apague depois de importar.
 
 ## Testar no computador
 
-Sem configurar o Supabase, o portal mostra um aviso e as plataformas abrem em modo de teste, sem login e sem salvar nada no banco. Para rodar localmente:
+Sem configurar o Supabase, o portal mostra um aviso e as plataformas abrem em modo de teste, sem login e sem salvar nada no banco:
 
 ```bash
 python3 -m http.server 8000

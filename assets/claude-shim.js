@@ -65,11 +65,21 @@
     // RLS recusou = sem permissão: o código original espera "invalid_argument"
     if (error) throw err(/row-level security|permission|42501/i.test(error.message + error.code) ? "invalid_argument" : "unavailable", error.message);
     notify(path);
+    syncProfile(path, body);
+  }
+  // Español: nível mudado no painel da professora -> atualiza também a conta do aluno
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  function syncProfile(path, body) {
+    if (SITE !== "espanol") return;
+    const [c, id] = segs(path);
+    if (c !== "students" || !UUID.test(id || "")) return;
+    sb.from("profiles").update({ es_level: body ? body.level || null : null }).eq("id", id).then(() => {}, () => {});
   }
   async function removeDoc(path) {
     const { error } = await sb.from(TABLE).delete().eq("site", SITE).eq("path", path);
     if (error) throw err("invalid_argument", error.message);
     notify(path);
+    syncProfile(path, null);
   }
 
   // ---------- consultas (filtros e ordenação feitos no navegador) ----------
@@ -210,7 +220,29 @@
   }
   async function makeDb() {
     const s = await S.session(); if (!s) return null;
+    if (SITE === "english") await linkEnglish(s);
     return Object.freeze({ doc, collection });
+  }
+
+  // English: abre a turma do aluno pelo código salvo na conta (sem digitar de novo)
+  async function linkEnglish(s) {
+    const ls = window.localStorage;
+    try {
+      if (ls.getItem("jinasOwner") !== s.user.id) {   // outra pessoa usou este aparelho antes
+        ls.removeItem("jinasFamilyCode"); ls.removeItem("jinasStaff"); ls.setItem("jinasOwner", s.user.id);
+      }
+      const p = await S.profile();
+      if (p && p.role === "student" && p.en_code) ls.setItem("jinasFamilyCode", p.en_code);
+      // se o aluno digitar o código uma vez, ele fica guardado na conta
+      const orig = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (k, v) {
+        orig.call(this, k, v);
+        if (this === ls && k === "jinasFamilyCode" && v && p && p.role === "student" && !p.en_code) {
+          p.en_code = String(v).trim().toUpperCase();
+          sb.from("profiles").update({ en_code: p.en_code }).eq("id", s.user.id).then(() => {}, () => {});
+        }
+      };
+    } catch (e) { /* armazenamento indisponível */ }
   }
 
   window.claude = Object.freeze({

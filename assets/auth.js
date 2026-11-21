@@ -18,10 +18,13 @@
     return data.session;
   }
 
-  async function profile() {
+  let _profile = null;
+  async function profile(force) {
+    if (_profile && !force) return _profile;
     const s = await session();
     if (!s) return null;
     const { data } = await sb.from("profiles").select("*").eq("id", s.user.id).maybeSingle();
+    if (data) _profile = data;
     return data || { id: s.user.id, full_name: s.user.user_metadata?.full_name || s.user.email, role: "student" };
   }
 
@@ -29,7 +32,8 @@
   async function requireLogin() {
     if (!sb) { console.warn("[School] Supabase não configurado: login desativado (modo de teste)."); return null; }
     const s = await session();
-    if (!s) {
+    const p = s && await profile();
+    if (!s || (p && p.must_change_password)) {
       location.replace(ROOT + "index.html?next=" + encodeURIComponent(location.pathname + location.search + location.hash));
       return new Promise(() => {}); // interrompe a página
     }

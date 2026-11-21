@@ -4,6 +4,7 @@
 <script src="../assets/config.js"></script>
 <script src="../assets/auth.js"></script>
 <script src="../assets/claude-shim.js" data-site="espanol"></script>
+<style>#logout,[data-stpass]{display:none!important}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Español con School · Plataforma Jinas School (Copy)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
@@ -402,14 +403,13 @@ function shell() {
 }
 function lockedHTML() {
   if (!S.ready) return `<div class="card center"><div class="spin"></div><p>Conectando con la plataforma…</p></div>`;
-  if (!S.db) return `<div class="card center narrow"><h2>Acceso de alumnos</h2><p>Para entrar necesitas iniciar sesión en la Jinas School y después escribir el usuario y la contraseña que te dio tu profesora.</p><p class="small">Si tienes problemas, escribe a <b>${EMAIL}</b>.</p></div>`;
+  if (!S.db) return `<div class="card center narrow"><h2>Acceso de alumnos</h2><p>Tu cuenta todavía no tiene un nivel de español. Pide a tu profesora que te incluya en una clase.</p><p class="small">Si tienes problemas, escribe a <b>${EMAIL}</b>.</p></div>`;
   if (!S.student && !S.teacher) return loginHTML();
   return `<div class="card center narrow"><h2>🔒 Nivel ${S.level}</h2><p>Este nivel está reservado para los alumnos de ${S.level}. Tú estás en el nivel <b>${S.student.level}</b>.</p><button class="btn" data-level="${S.student.level}">Ir a mi nivel</button></div>`;
 }
 function loginHTML() {
-  return `<div class="login card narrow"><img src="${DATA.logo}" class="lg"><h2>¡Bienvenido/a a <em>Español con School</em>!</h2><p>Escribe el usuario y la contraseña que te dio tu profesora.</p>
-   <form id="loginf"><label>Usuario<input name="u" autocomplete="username" required></label><label>Contraseña<input name="p" type="password" autocomplete="current-password" required></label><button class="btn">Entrar</button></form>
-   <p class="small">¿Olvidaste tu contraseña? Escribe a <b>${EMAIL}</b>.</p></div>`;
+  return `<div class="login card narrow"><img src="${DATA.logo}" class="lg"><h2>¡Bienvenido/a a <em>Español con School</em>!</h2><p>Tu cuenta todavía no está en ninguna clase de español. Pide a tu profesora que te incluya en un nivel y vuelve a entrar.</p>
+   <p class="small">¿Dudas? Escribe a <b>${EMAIL}</b>.</p></div>`;
 }
 function soon() { return `<div class="card center narrow"><h2>Nivel ${S.level}</h2><p>El material del nivel <b>${S.level}</b> está en preparación: muy pronto tendrás aquí tu nueva apostila, ejercicios, vídeos y temas.</p><p class="small">Mientras tanto, consulta el calendario o escribe a tu profesora.</p></div>`; }
 
@@ -650,8 +650,7 @@ function panel() {
   const ps = S.panelTab || "alumnos"; let b = "";
   if (ps === "alumnos") {
     const prog = Object.fromEntries(S.allProgress.map(p => [p.user, p]));
-    b = `<div class="card"><h2>Crear alumno</h2><form id="newst" class="row"><input name="name" placeholder="Nombre completo" required><input name="user" placeholder="Usuario (ej.: ana.silva)" required><input name="pass" placeholder="Contraseña" required><select name="level">${LEVELS.map(l => `<option ${l === "B1" ? "selected" : ""}>${l}</option>`).join("")}</select><button class="btn">Crear</button></form>
-     <p class="small">Anota la contraseña y entrégasela al alumno: por seguridad no se puede ver después (solo crear una nueva).</p></div>
+    b = `<div class="card tint"><h2>Crear alumno</h2><p>Los alumnos se crean en la <a href="../index.html"><b>página de inicio de la Jinas School</b></a> (Crear acceso), con su nivel de español. Aparecen aquí automáticamente y entran solo con su correo y contraseña.</p></div>
      <div class="card"><h2>Mis alumnos (${S.students.length})</h2><table class="tbl"><tr><th>Nombre</th><th>Usuario</th><th>Nivel</th><th>Ejercicios</th><th>Media</th><th></th></tr>
      ${S.students.sort((a, b) => a.name.localeCompare(b.name)).map(s => { const p = prog[s.user]; const sc = p ? Object.values(p.scores || {}) : []; const avg = sc.length ? (sc.reduce((a, x) => a + x.s / x.m, 0) / sc.length * 10).toFixed(1).replace(".", ",") : "–";
        return `<tr><td>${esc(s.name)}</td><td>${esc(s.user)}</td><td><select data-stlevel="${s.key}">${LEVELS.map(l => `<option ${l === s.level ? "selected" : ""}>${l}</option>`).join("")}</select></td><td>${sc.length}</td><td>${avg}</td><td><button class="ghost sm" data-stpass="${s.key}">Nueva contraseña</button><button class="x" data-stdel="${s.key}">Eliminar</button></td></tr>`; }).join("") || `<tr><td colspan="6">Todavía no hay alumnos.</td></tr>`}</table></div>`;
@@ -668,7 +667,7 @@ function panel() {
       <form class="gform row" data-sub="${it.pid}|${it.k}"><input name="grade" type="number" min="0" max="10" step="0.5" placeholder="Nota 0–10" value="${it.grade ?? ""}"><input name="fb" placeholder="Comentario para el alumno" value="${esc(it.fb || "")}"><button class="btn sm">Guardar nota</button></form></div>`).join("") || "<p class='small'>Todavía no hay entregas.</p>"}</div>`;
   }
   return `<h1 class="pt">Panel de la profesora</h1><div class="tabs">${[["alumnos", "👩‍🎓 Alumnos"], ["mural", "💬 Mural"], ["tareas", "📎 Tareas"], ["entregas", "📨 Entregas y notas"]].map(([k, t]) => `<button class="${ps === k ? "act" : ""}" data-ptab="${k}">${t}</button>`).join("")}</div>${b}
-   <div class="card tint small"><b>Cómo dar acceso:</b> 1) el alumno crea su cuenta en la página de inicio de la Jinas School; 2) crea aquí su usuario y contraseña con su nivel; 3) el alumno entra con su cuenta, escribe usuario y contraseña, y solo ve su nivel.</div>`;
+   <div class="card tint small"><b>Cómo dar acceso:</b> 1) crea el acceso del alumno en la página de inicio de la Jinas School, con su nivel; 2) envíale el correo y la contraseña provisional; 3) en el primer acceso el alumno crea su propia contraseña y ya ve su nivel.</div>`;
 }
 async function sha(s) { try { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); } catch (e) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return "f" + (h >>> 0).toString(16) + s.length; } }
 const keyOf = (u, p) => sha("ecf|" + u.trim().toLowerCase() + "|" + p);
