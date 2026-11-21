@@ -278,7 +278,7 @@ async function loadSchool(){
 async function loginMgmt(){
   if (!ACC.db) throw new Error('Open this website from the school link while signed in to your Jinas School account.');
   let s; try { s = await ACC.db.doc('admin/owner').get(); } catch(e) { s = null; }
-  if (!s || !s.exists) throw new Error('This account does not have management access. Sign in with the school's management account.');
+  if (!s || !s.exists) throw new Error('This account does not have management access. Sign in with the management account of the school.');
   ACC.dk = s.data().dk; ACC.role = 'mgmt'; ACC.staff = {name:'Management', email:''}; await loadSchool();
   storeSet('jinasStaff', JSON.stringify({role:'mgmt', dk:ACC.dk})); ACC.family = null; renderWho(); }
 async function loginTeacher(email, code){

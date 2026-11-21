@@ -48,16 +48,17 @@
     bar.id = "school-bar";
     bar.innerHTML = `
       <style>
-        #school-bar{position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:8px;align-items:center;
-          background:#14213d;color:#fff;border-radius:999px;padding:6px 8px 6px 14px;font:600 13px Inter,system-ui,sans-serif;
+        #side{padding-bottom:62px}
+        #school-bar{position:fixed;left:10px;bottom:12px;z-index:9999;max-width:calc(var(--side,250px) - 20px);display:flex;gap:8px;align-items:center;
+          background:#14213d;color:#fff;border-radius:999px;padding:6px 6px 6px 12px;font:600 13px Inter,system-ui,sans-serif;
           box-shadow:0 6px 24px rgba(0,0,0,.25)}
-        #school-bar a,#school-bar button{background:#fff;color:#14213d;border:0;border-radius:999px;padding:5px 12px;
-          font:700 12.5px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
-        #school-bar .me{opacity:.9;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        #school-bar a,#school-bar button{background:#fff;color:#14213d;border:0;border-radius:999px;padding:5px 9px;
+          font:700 12px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+        #school-bar .me{opacity:.9;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       </style>
       <span class="me"></span>
       <a href="${ROOT}${current === "english" ? "espanol" : "english"}/index.html">${current === "english" ? "Español" : "English"}</a>
-      <a href="${ROOT}index.html">Início</a>
+      <a href="${ROOT}index.html" title="Início" aria-label="Início">⌂</a>
       <button type="button">Sair</button>`;
     bar.querySelector(".me").textContent = p ? (p.full_name || "Aluno") : "Modo de teste";
     bar.querySelector("button").onclick = signOut;
