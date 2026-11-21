@@ -162,23 +162,22 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
       <span class="k">English w/ School</span>
       <h2>English</h2>
       <p>Lessons, vocabulary, listening and reading for every level.</p>
-      <div class="bar"><b id="pb-english"></b></div>
       <span class="go">Start →</span>
     </a>
     <a class="plat es" href="espanol/index.html">
       <span class="k">Español con School</span>
       <h2>Español</h2>
       <p>Lecciones, vocabulario y práctica del nivel A1 al C1.</p>
-      <div class="bar"><b id="pb-espanol"></b></div>
       <span class="go">Empezar →</span>
     </a>
   </div>
 
   <div id="teacher" class="card hidden">
-    <h2>Alunos</h2>
-    <p class="note">Visível só para professores. Mostra quando cada aluno estudou pela última vez em cada plataforma.</p>
+    <h2>Contas da escola</h2>
+    <p class="note" id="teacher-note">Visível só para professores. Notas, tarefas e turmas de cada aluno ficam no painel de cada plataforma.</p>
+    <div id="rolemsg" class="msg hidden" role="status" style="margin-bottom:10px"></div>
     <div style="overflow:auto"><table>
-      <thead><tr><th>Aluno</th><th>E-mail</th><th>English</th><th>Español</th></tr></thead>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Cadastro</th><th>Função</th></tr></thead>
       <tbody id="students"></tbody>
     </table></div>
   </div>
@@ -259,29 +258,35 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
     const first = (p.full_name || "").split(" ")[0] || "aluno";
     $("#hello").textContent = "Olá, " + first + "!";
     $("#me-name").textContent = p.full_name || p.email || "";
-    // barrinhas de progresso (usa o campo "percent" se a plataforma salvar)
-    for (const plat of ["english", "espanol"]) {
-      const d = await School.loadProgress(plat);
-      if (d && typeof d.percent === "number") $("#pb-" + plat).style.width = Math.max(0, Math.min(100, d.percent)) + "%";
-    }
-    if (p.role === "teacher") { $("#me-teacher").classList.remove("hidden"); loadStudents(); }
+    if (p.role === "teacher" || p.role === "admin") { $("#me-teacher").classList.remove("hidden"); loadStudents(); }
   }
 
   async function loadStudents() {
     $("#teacher").classList.remove("hidden");
-    const [{ data: people }, { data: prog }] = await Promise.all([
-      sb.from("profiles").select("id,full_name,email,role").order("full_name"),
-      sb.from("progress").select("user_id,platform,updated_at")
-    ]);
-    const last = {}; (prog || []).forEach(r => last[r.user_id + ":" + r.platform] = r.updated_at);
-    const fmt = d => d ? new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+    const me = await School.profile();
+    const isAdmin = me.role === "admin";
+    if (isAdmin) $("#teacher-note").textContent = "Você é da administração: pode mudar a função de cada conta (aluno, professor ou administração).";
+    const { data: people } = await sb.from("profiles").select("id,full_name,email,role,created_at").order("full_name");
+    const ROLES = { student: "Aluno(a)", teacher: "Professor(a)", admin: "Administração" };
+    const fmt = d => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
     const tb = $("#students"); tb.innerHTML = "";
-    (people || []).filter(x => x.role !== "teacher").forEach(x => {
+    (people || []).forEach(x => {
       const tr = document.createElement("tr");
-      [x.full_name || "—", x.email || "", fmt(last[x.id + ":english"]), fmt(last[x.id + ":espanol"])].forEach(v => { const td = document.createElement("td"); td.textContent = v; tr.appendChild(td); });
-      tb.appendChild(tr);
+      [x.full_name || "—", x.email || "", fmt(x.created_at)].forEach(v => { const td = document.createElement("td"); td.textContent = v; tr.appendChild(td); });
+      const td = document.createElement("td");
+      if (isAdmin && x.id !== me.id) {
+        const sel = document.createElement("select");
+        Object.entries(ROLES).forEach(([k, v]) => { const o = document.createElement("option"); o.value = k; o.textContent = v; o.selected = x.role === k; sel.appendChild(o); });
+        sel.onchange = async () => {
+          const { error } = await sb.from("profiles").update({ role: sel.value }).eq("id", x.id);
+          const m = $("#rolemsg"); m.className = "msg " + (error ? "err" : "ok");
+          m.textContent = error ? "Não foi possível mudar a função." : "Função de " + (x.full_name || x.email) + " atualizada.";
+        };
+        td.appendChild(sel);
+      } else td.textContent = ROLES[x.role] || x.role;
+      tr.appendChild(td); tb.appendChild(tr);
     });
-    if (!tb.children.length) tb.innerHTML = '<tr><td colspan="4" class="note">Nenhum aluno cadastrado ainda.</td></tr>';
+    if (!tb.children.length) tb.innerHTML = '<tr><td colspan="4" class="note">Nenhuma conta ainda.</td></tr>';
   }
 
   const s = await School.session();

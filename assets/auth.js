@@ -36,24 +36,6 @@
     return s;
   }
 
-  // Progresso: um registro por aluno e por plataforma ("english" | "espanol")
-  async function loadProgress(platform) {
-    const s = await session();
-    if (!s) return JSON.parse(localStorage.getItem("progress:" + platform) || "{}");
-    const { data } = await sb.from("progress").select("data").eq("user_id", s.user.id).eq("platform", platform).maybeSingle();
-    return (data && data.data) || {};
-  }
-
-  async function saveProgress(platform, obj) {
-    const s = await session();
-    if (!s) { localStorage.setItem("progress:" + platform, JSON.stringify(obj)); return; }
-    const { error } = await sb.from("progress").upsert(
-      { user_id: s.user.id, platform, data: obj, updated_at: new Date().toISOString() },
-      { onConflict: "user_id,platform" }
-    );
-    if (error) console.error("[School] erro ao salvar progresso", error);
-  }
-
   async function signOut() {
     if (sb) await sb.auth.signOut();
     location.href = ROOT + "index.html";
@@ -82,5 +64,5 @@
     document.body.appendChild(bar);
   }
 
-  window.School = { sb, configured, ROOT, session, profile, requireLogin, loadProgress, saveProgress, signOut, mountBar };
+  window.School = { sb, configured, ROOT, session, profile, requireLogin, signOut, mountBar };
 })();
