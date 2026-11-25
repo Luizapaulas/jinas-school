@@ -219,7 +219,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const svg = (n, s=100) => (!ART[n] && n && /[^\x00-\x7F]/.test(n)) ? `<span class="emo" style="font-size:${Math.round(s*.72)}px;line-height:1;display:inline-block;width:${s}px;text-align:center" aria-hidden="true">${n}</span>` : `<svg viewBox="-4 -4 108 108" width="${s}" height="${s}" aria-hidden="true">${ART[n]||''}</svg>`;
 const ICO = {play:'<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="#14213d"/></svg>', pause:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" fill="#14213d"/><rect x="14" y="4" width="5" height="16" fill="#14213d"/></svg>', stop:'<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2" fill="#14213d"/></svg>'};
 const SPK = `<span class="mini" aria-hidden="true">${ICO.play}</span>`;
-$('#logoArt').innerHTML = svg('schoolinho', 42);
+$('#logoArt').innerHTML = '<img src="../assets/logo-jinas.png" alt="Jinas School" style="width:40px;height:44px;object-fit:contain">';
 function storeGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
 function storeSet(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e) {} }
 
@@ -1022,7 +1022,7 @@ async function route(){
   const lvId = m ? m[1] : (LV[h] ? h : null);
   const kidsTheme = lvId ? !!LV[lvId]?.kids : (h === 'words' && ACC.family && LV[ACC.family.level]?.kids);
   document.body.classList.toggle('kids', !!kidsTheme);
-  $('#logoArt').innerHTML = svg(kidsTheme && LV[lvId || ACC.family?.level]?.sch === 'b_' ? 'b_schoolinho' : 'schoolinho', 42);
+  $('#logoArt').innerHTML = '<img src="../assets/logo-jinas.png" alt="Jinas School" style="width:40px;height:44px;object-fit:contain">';
   let html;
   if (!ACC.ready && window.claude) html = '<p class="note">Loading…</p>';
   else if (m && LV[m[1]]) html = m[3] ? await lessonView(LV[m[1]], +m[2], +m[3]) : await unitView(LV[m[1]], +m[2]);

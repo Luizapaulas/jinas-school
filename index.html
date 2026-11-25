@@ -216,7 +216,7 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
     <footer>Ainda não tem acesso? Fale com a sua professora ou com a secretaria.</footer>
   </div>
   <div class="auth-art" aria-hidden="true">
-    <figure><img src="assets/photo-english.jpg" alt=""><figcaption><img src="assets/logo-english.svg" alt="">English w/ School<span></span></figcaption></figure>
+    <figure><img src="assets/photo-english.jpg" alt=""><figcaption><img src="assets/logo-jinas.png" alt="">English w/ School<span></span></figcaption></figure>
     <figure><img src="assets/photo-espanol.jpg" alt=""><figcaption><img src="assets/logo-jinas.png" alt="">Español con School<span></span></figcaption></figure>
   </div>
 </section>
@@ -426,14 +426,14 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
       box.appendChild(a);
     };
     if (STAFF) {
-      card("en", "english/index.html", "assets/photo-english.jpg", "assets/logo-english.svg", "English w/ School", "Teacher Desk", "Mural, tarefas, notas e recados das turmas de inglês.", "Abrir o English");
+      card("en", "english/index.html", "assets/photo-english.jpg", "assets/logo-jinas.png", "English w/ School", "Teacher Desk", "Mural, tarefas, notas e recados das turmas de inglês.", "Abrir o English");
       card("es", "espanol/index.html", "assets/photo-espanol.jpg", "assets/logo-jinas.png", "Español con School", "Panel de la profesora", "Alunos, temas, tarefas e notas das turmas de espanhol.", "Abrir o Español");
       $("#hello-sub").textContent = "O que você quer fazer hoje?";
       return;
     }
     const { data: esDoc } = await sb.from("site_docs").select("data").eq("site", "espanol").eq("path", "students/" + ME.id).maybeSingle();
     const esLevel = esDoc && esDoc.data && esDoc.data.level;
-    if (ME.en_level) card("en", "english/index.html", "assets/photo-english.jpg", "assets/logo-english.svg", "English w/ School", EN_LEVELS[ME.en_level] || "Minha turma", "Aulas com áudio, vocabulário, leitura e exercícios.", "Continuar estudando");
+    if (ME.en_level) card("en", "english/index.html", "assets/photo-english.jpg", "assets/logo-jinas.png", "English w/ School", EN_LEVELS[ME.en_level] || "Minha turma", "Aulas com áudio, vocabulário, leitura e exercícios.", "Continuar estudando");
     if (esLevel) card("es", "espanol/index.html", "assets/photo-espanol.jpg", "assets/logo-jinas.png", "Español con School", "Nível " + esLevel, "Unidades, verbos, gramática e simulados DELE.", "Continuar estudando");
     const n = box.children.length;
     if (!n) {
