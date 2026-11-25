@@ -6,7 +6,11 @@
 (function () {
   const cfg = window.SCHOOL_CONFIG || {};
   const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes("SEU-PROJETO");
-  const sb = configured ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+  const demo = !configured && !!window.SupabaseDemo;   // sem Supabase configurado: modo de demonstração
+  const lib = configured ? window.supabase : window.SupabaseDemo;
+  const sb = lib ? lib.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+  // cliente separado (para criar contas sem desconectar quem está cadastrando)
+  const newClient = opts => lib.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, opts);
 
   // Caminho até a raiz do site (funciona em GitHub Pages com subpasta /nome-do-repo/)
   const scriptSrc = document.currentScript && document.currentScript.src;
@@ -30,7 +34,7 @@
 
   // Protege uma página: sem login, volta para o portal.
   async function requireLogin() {
-    if (!sb) { console.warn("[School] Supabase não configurado: login desativado (modo de teste)."); return null; }
+    if (!sb) return null;
     const s = await session();
     const p = s && await profile();
     if (!s || (p && p.must_change_password)) {
@@ -94,5 +98,5 @@
     document.body.prepend(bar);
   }
 
-  window.School = { sb, configured, ROOT, session, profile, requireLogin, signOut, mountBar };
+  window.School = { sb, configured, demo, newClient, ROOT, session, profile, requireLogin, signOut, mountBar };
 })();

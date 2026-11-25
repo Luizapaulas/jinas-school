@@ -78,9 +78,13 @@ As unidades do English são **criptografadas** dentro do arquivo; as chaves fica
 
 > O arquivo de exportação contém a chave mestra das aulas: **não coloque no GitHub** (o `.gitignore` já bloqueia) e apague depois de importar.
 
+## Modo de demonstração
+
+Enquanto `assets/config.js` não tiver as chaves do Supabase, o site abre em **modo de demonstração**: a tela de entrada mostra contas de teste (aluna, professora, administração e primeiro acesso) e tudo funciona com dados de exemplo guardados só no navegador. Assim que você colar as chaves do Supabase, o login de verdade entra no lugar e as contas de teste somem.
+
 ## Testar no computador
 
-Sem configurar o Supabase, o portal mostra um aviso e as plataformas abrem em modo de teste, sem login e sem salvar nada no banco:
+Para rodar no computador (abre em modo de demonstração se o Supabase não estiver configurado):
 
 ```bash
 python3 -m http.server 8000
