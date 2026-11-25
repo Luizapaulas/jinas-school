@@ -24,7 +24,7 @@
     const s = await session();
     if (!s) return null;
     const { data } = await sb.from("profiles").select("*").eq("id", s.user.id).maybeSingle();
-    if (data) _profile = data;
+    if (data) { _profile = data; try { if (data.es_level) localStorage.setItem("jinasEsLevel", data.es_level); else localStorage.removeItem("jinasEsLevel"); } catch (e) {} }
     return data || { id: s.user.id, full_name: s.user.user_metadata?.full_name || s.user.email, role: "student" };
   }
 
@@ -45,28 +45,53 @@
     location.href = ROOT + "index.html";
   }
 
-  // Barra fixa no topo das plataformas: nome do aluno, trocar idioma, sair
+  // Barra da escola no topo das plataformas: logo, troca de plataforma, conta e sair
   async function mountBar(current) {
     const p = await profile();
-    const bar = document.createElement("div");
+    const staff = p && (p.role === "teacher" || p.role === "admin");
+    const has = { english: staff || !p || !!p.en_level, espanol: staff || !p || !!p.es_level };
+    const name = p ? (p.full_name || p.email || "") : "Modo de teste";
+    const initials = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "J";
+    const bar = document.createElement("header");
     bar.id = "school-bar";
+    bar.setAttribute("aria-label", "Jinas School");
     bar.innerHTML = `
       <style>
-        #side{padding-bottom:62px}
-        #school-bar{position:fixed;left:10px;bottom:12px;z-index:9999;max-width:calc(var(--side,250px) - 20px);display:flex;gap:8px;align-items:center;
-          background:#14213d;color:#fff;border-radius:999px;padding:6px 6px 6px 12px;font:600 13px Inter,system-ui,sans-serif;
-          box-shadow:0 6px 24px rgba(0,0,0,.25)}
-        #school-bar a,#school-bar button{background:#fff;color:#14213d;border:0;border-radius:999px;padding:5px 9px;
-          font:700 12px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
-        #school-bar .me{opacity:.9;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        :root{--sbh:48px}
+        body{padding-top:var(--sbh)!important}
+        #side{top:var(--sbh)!important}
+        #top{top:var(--sbh)!important}
+        #school-bar{position:fixed;top:0;left:0;right:0;height:var(--sbh);z-index:9999;display:flex;align-items:center;gap:14px;padding:0 14px 0 12px;
+          background:#14213d;color:#fff;font:500 14px Inter,system-ui,sans-serif;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+        #school-bar a{color:inherit;text-decoration:none}
+        #school-bar .sb-home{display:flex;align-items:center;gap:8px;font:700 15px Poppins,system-ui,sans-serif;white-space:nowrap}
+        #school-bar .sb-home img{width:26px;height:30px;object-fit:contain;background:#fff;border-radius:7px;padding:2px}
+        #school-bar .sb-switch{display:flex;background:rgba(255,255,255,.1);border-radius:999px;padding:3px;gap:2px}
+        #school-bar .sb-switch a{padding:5px 14px;border-radius:999px;font:600 13.5px Poppins,system-ui,sans-serif;color:#cfd6e6}
+        #school-bar .sb-switch a[aria-current="page"]{background:#fff;color:#14213d}
+        #school-bar .sb-switch a:not([aria-current]):hover{color:#fff}
+        #school-bar .sb-me{margin-left:auto;display:flex;align-items:center;gap:10px;min-width:0}
+        #school-bar .sb-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;color:#e6ebf5}
+        #school-bar .sb-av{width:30px;height:30px;border-radius:50%;background:#ffc300;color:#14213d;display:grid;place-items:center;font:700 12.5px Poppins,sans-serif;flex:none}
+        #school-bar button{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;padding:5px 12px;font:600 13px Inter,sans-serif;cursor:pointer}
+        #school-bar button:hover{background:rgba(255,255,255,.1)}
+        #school-bar :focus-visible{outline:3px solid #ffc300;outline-offset:2px}
+        @media (max-width:640px){
+          #school-bar{gap:10px;padding:0 10px}
+          #school-bar .sb-home span,#school-bar .sb-name{display:none}
+          #school-bar .sb-switch a{padding:5px 11px}
+        }
       </style>
-      <span class="me"></span>
-      <a href="${ROOT}${current === "english" ? "espanol" : "english"}/index.html">${current === "english" ? "Español" : "English"}</a>
-      <a href="${ROOT}index.html" title="Início" aria-label="Início">⌂</a>
-      <button type="button">Sair</button>`;
-    bar.querySelector(".me").textContent = p ? (p.full_name || "Aluno") : "Modo de teste";
+      <a class="sb-home" href="${ROOT}index.html" title="Voltar para minhas turmas"><img src="${ROOT}assets/logo-jinas.png" alt=""><span>Jinas School</span></a>
+      <nav class="sb-switch" aria-label="Plataformas">
+        ${has.english ? `<a href="${ROOT}english/index.html" ${current === "english" ? 'aria-current="page"' : ""}>English</a>` : ""}
+        ${has.espanol ? `<a href="${ROOT}espanol/index.html" ${current === "espanol" ? 'aria-current="page"' : ""}>Español</a>` : ""}
+      </nav>
+      <div class="sb-me"><span class="sb-name"></span><span class="sb-av" aria-hidden="true"></span><button type="button">Sair</button></div>`;
+    bar.querySelector(".sb-name").textContent = name;
+    bar.querySelector(".sb-av").textContent = initials;
     bar.querySelector("button").onclick = signOut;
-    document.body.appendChild(bar);
+    document.body.prepend(bar);
   }
 
   window.School = { sb, configured, ROOT, session, profile, requireLogin, signOut, mountBar };

@@ -36,7 +36,32 @@
   .hub-x{background:none;border:0;color:var(--bad);font-weight:700;font-size:12.5px;text-decoration:underline;padding:0 0 0 6px}
   .hub-task .st{font-size:13px;font-weight:700}
   .hub-grade{font:800 22px var(--display);color:var(--red)}
-  #who .linkbtn{display:none}`;
+  #who .linkbtn{display:none}
+  .level.hub-mine{box-shadow:0 0 0 3px var(--gold);order:-1}
+  .hub-badge{align-self:flex-start;margin-top:4px}
+  @media (max-width:860px){
+    /* menu vira uma faixa rolável e o conteúdo aparece logo */
+    #side{display:flex!important;flex-direction:row!important;align-items:center;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;position:sticky!important;top:var(--sbh,0)!important;z-index:35}
+    #side::-webkit-scrollbar{display:none}
+    #side .brand{padding:8px 10px;border:0;flex:none;display:flex}
+    #side .brand .logo{width:34px;height:34px;border-radius:9px}
+    #side .brand b,#side .brand span span{display:none}
+    #side nav{flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px 6px 0;gap:4px;margin:0}
+    #side nav button{white-space:nowrap;padding:8px 12px}
+    #side .side-foot{display:none}
+    #top{position:static!important;padding:8px 16px;min-height:0}
+    main{padding:18px 16px 40px}
+    /* player de áudio compacto */
+    .player .aistripe{font-size:10.5px;padding:3px 6px}
+    .player .in{gap:8px!important;padding:8px 12px!important;flex-wrap:nowrap!important;align-items:center}
+    .player .now b{font-size:13.5px}
+    .player .pbtn{width:40px;height:40px;flex:none}
+    .player .now{flex:1 1 auto}
+    .player .now .ai-tag,.player .speed{display:none}
+    .player .chips{flex:none}
+    .player .chips button[data-s="0.9"]{display:none}
+    body{padding-bottom:84px}
+  }`;
   document.head.appendChild(css);
 
   // ---------------- Vistas ----------------
@@ -153,7 +178,18 @@
   const redraw = () => { drawThemes(); drawTasks(); drawGrades(); drawNews(); drawDesk(); };
 
   // ---------------- Dados ao vivo ----------------
+  // A turma do aluno aparece primeiro, destacada, em "My Classes" e na página inicial
+  function myClassFirst() {
+    const lv = ACC.family && ACC.family.level; if (!lv || staff()) return;
+    document.querySelectorAll(".levels").forEach(box => {
+      const mine = box.querySelector(`.level[data-go="${lv}"]`); if (!mine) return;
+      box.prepend(mine); mine.classList.add("hub-mine");
+      if (!mine.querySelector(".hub-badge")) { const b = document.createElement("span"); b.className = "badge ok hub-badge"; b.textContent = "Your class"; mine.appendChild(b); }
+    });
+  }
+
   function after(h) {
+    if (h === "levels" || h === "home") myClassFirst();
     if (!["board", "tasks", "grades", "news", "desk"].includes(h) || !db()) return;
     const d = db();
     sub(d.collection("themes"), s => { H.themes = s.docs.map(x => ({ id: x.id, ...x.data() })); redraw(); });
