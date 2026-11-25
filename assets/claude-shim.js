@@ -220,21 +220,21 @@
   }
   async function makeDb() {
     const s = await S.session(); if (!s) return null;
-    if (SITE === "english") await linkEnglish(s);
     return Object.freeze({ doc, collection });
   }
 
-  // English: a turma do aluno abre pela conta (sem código de família).
-  // Quando a gestão/professor libera unidades, as chaves liberadas de cada turma
-  // são publicadas em levelkeys/<turma>, que só os alunos daquela turma conseguem ler.
+  // English: tudo pela conta, como no Español.
+  //  - Alunos: abrem TODAS as unidades da turma da conta (en_level). As chaves de cada
+  //    turma ficam em levelkeys/<turma>, que só os alunos daquela turma conseguem ler.
+  //  - Professor e administração: entram direto no Teacher Desk (sem código PROF).
   if (SITE === "english") {
-    window.SchoolLevelKeys = async (keys, releases) => {
+    window.SchoolLevelKeys = async (keys) => {
       try {
-        const levels = new Set([...Object.keys(releases || {}), ...Object.keys(keys || {}).map(k => k.replace(/-u\d+$/, ""))]);
-        for (const lv of levels) {
-          const lk = {}; (releases[lv] || []).forEach(n => { const k = keys[lv + "-u" + n]; if (k) lk[lv + "-u" + n] = k; });
-          const ref = doc("levelkeys/" + lv); const cur = await readDoc(ref.path);
-          if (JSON.stringify((cur && cur.keys) || {}) !== JSON.stringify(lk)) await ref.set({ keys: lk, at: Date.now() });
+        const by = {};
+        Object.entries(keys || {}).forEach(([uid, k]) => { const lv = uid.replace(/-u\d+$/, ""); (by[lv] = by[lv] || {})[uid] = k; });
+        for (const [lv, lk] of Object.entries(by)) {
+          const cur = await readDoc("levelkeys/" + lv);
+          if (JSON.stringify((cur && cur.keys) || {}) !== JSON.stringify(lk)) await writeDoc("levelkeys/" + lv, { keys: lk, at: Date.now() });
         }
       } catch (e) { console.warn("[School] não foi possível publicar as chaves das turmas", e); }
     };
@@ -244,27 +244,14 @@
       const d = await readDoc("levelkeys/" + p.en_level);
       return { id: "acct-" + p.id, code: "", level: p.en_level, child: (p.full_name || "").split(" ")[0] || "Student", keys: (d && d.keys) || {} };
     };
-  }
-
-  // English: abre a turma do aluno pelo código salvo na conta (sem digitar de novo)
-  async function linkEnglish(s) {
-    const ls = window.localStorage;
-    try {
-      if (ls.getItem("jinasOwner") !== s.user.id) {   // outra pessoa usou este aparelho antes
-        ls.removeItem("jinasFamilyCode"); ls.removeItem("jinasStaff"); ls.setItem("jinasOwner", s.user.id);
-      }
+    window.SchoolStaff = async () => {
       const p = await S.profile();
-      if (p && p.role === "student" && p.en_code) ls.setItem("jinasFamilyCode", p.en_code);
-      // se o aluno digitar o código uma vez, ele fica guardado na conta
-      const orig = Storage.prototype.setItem;
-      Storage.prototype.setItem = function (k, v) {
-        orig.call(this, k, v);
-        if (this === ls && k === "jinasFamilyCode" && v && p && p.role === "student" && !p.en_code) {
-          p.en_code = String(v).trim().toUpperCase();
-          sb.from("profiles").update({ en_code: p.en_code }).eq("id", s.user.id).then(() => {}, () => {});
-        }
-      };
-    } catch (e) { /* armazenamento indisponível */ }
+      if (!p || (p.role !== "teacher" && p.role !== "admin")) return null;
+      const o = await readDoc("admin/owner");
+      if (!o || !o.dk) return null;   // dados do English ainda não importados
+      return { role: p.role === "admin" ? "mgmt" : "teacher", name: p.full_name || p.email, email: p.email || "", dk: o.dk };
+    };
+    try { localStorage.removeItem("jinasFamilyCode"); localStorage.removeItem("jinasStaff"); } catch (e) {}
   }
 
   window.claude = Object.freeze({

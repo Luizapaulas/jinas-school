@@ -169,7 +169,6 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
           <label>Função<select name="role" id="c-role"></select></label>
           <label class="stu">Español · nível<select name="es_level"></select></label>
           <label class="stu">English · turma<select name="en_level"></select></label>
-          <label class="stu">English · código de acesso<input name="en_code" placeholder="LION-XXXX-XXXX (opcional)"></label>
           <button class="btn" type="submit">Criar acesso</button>
         </div>
       </form>
@@ -182,7 +181,7 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
       <div class="tools"><input id="filter" placeholder="Buscar por nome ou e-mail"><span class="note" id="count"></span></div>
       <div id="rolemsg" class="msg hidden" role="status" style="margin-bottom:10px"></div>
       <div style="overflow:auto"><table>
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Español</th><th>English · turma</th><th>English · código</th><th>Status</th></tr></thead>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Español</th><th>English · turma</th><th>Status</th></tr></thead>
         <tbody id="people"></tbody>
       </table></div>
       <p class="note">Esqueceu a senha? O próprio aluno usa <b>Esqueci minha senha</b> na tela de entrada e recebe um link por e-mail.</p>
@@ -190,7 +189,7 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
 
     <div class="card hidden" id="import">
       <h2>Importar dados do English</h2>
-      <p class="note">Use o arquivo JSON exportado do site original (chaves das unidades, famílias, professores, recados). Só a administração vê esta parte.</p>
+      <p class="note">Use o arquivo JSON exportado do site original (chaves das unidades). Depois de importar, cada aluno já vê todas as unidades da turma dele. Só a administração vê esta parte.</p>
       <div class="tools"><input type="file" id="importfile" accept=".json,application/json"><button class="btn sm" id="importbtn">Importar</button></div>
       <div id="importmsg" class="msg hidden" role="status"></div>
     </div>
@@ -293,14 +292,14 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
       box.appendChild(a);
     };
     if (staff) {
-      card("en", "english/index.html", "English w/ School", "English", "Teacher Desk", "Turmas, unidades, famílias e recados.", "Abrir →");
+      card("en", "english/index.html", "English w/ School", "English", "Teacher Desk", "Mural, tarefas, notas e recados.", "Abrir →");
       card("es", "espanol/index.html", "Español con School", "Español", "Panel de la profesora", "Alumnos, temas, tareas y notas.", "Abrir →");
       $("#hello-sub").textContent = "Você tem acesso às duas plataformas.";
       return;
     }
     const { data: esDoc } = await sb.from("site_docs").select("data").eq("site", "espanol").eq("path", "students/" + ME.id).maybeSingle();
     const esLevel = esDoc && esDoc.data && esDoc.data.level;
-    if (ME.en_level || ME.en_code)
+    if (ME.en_level)
       card("en", "english/index.html", "English w/ School", "English", EN_LEVELS[ME.en_level] || "Minha turma", "Lessons, vocabulary, listening and reading.", "Start →");
     if (esLevel)
       card("es", "espanol/index.html", "Español con School", "Español", "Nivel " + esLevel, "Lecciones, vocabulario y práctica.", "Empezar →");
@@ -341,8 +340,7 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
     const email = f.email.value.trim().toLowerCase(), password = f.password.value, role = f.role.value;
     const inv = { email, full_name: f.full_name.value.trim(), role,
       es_level: role === "student" ? f.es_level.value || null : null,
-      en_level: role === "student" ? f.en_level.value || null : null,
-      en_code: role === "student" ? f.en_code.value.trim().toUpperCase() || null : null };
+      en_level: role === "student" ? f.en_level.value || null : null };
     try {
       await sb.from("invites").delete().eq("email", email);
       const { error: e1 } = await sb.from("invites").insert(inv);
@@ -399,14 +397,12 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
         es.onchange = () => save(p, { es_level: es.value || null }, "Español"); td(es);
         const en = document.createElement("select"); opt(en, EN_LEVELS, "—"); en.value = p.en_level || "";
         en.onchange = () => save(p, { en_level: en.value || null }, "English"); td(en);
-        const code = document.createElement("input"); code.value = p.en_code || ""; code.placeholder = "LION-…";
-        code.onchange = () => save(p, { en_code: code.value.trim().toUpperCase() || null }, "Código do English"); td(code);
-      } else { td(isStu ? (p.es_now || "—") : "todas"); td(isStu ? (EN_LEVELS[p.en_level] || "—") : "todas"); td(isStu ? (p.en_code || "—") : ""); }
+      } else { td(isStu ? (p.es_now || "—") : "todas"); td(isStu ? (EN_LEVELS[p.en_level] || "—") : "todas"); }
       const st = document.createElement("span"); st.className = "tag" + (p.must_change_password ? " warn" : "");
       st.textContent = p.must_change_password ? "Senha provisória" : "Ativo"; td(st);
       tb.appendChild(tr);
     });
-    if (!list.length) tb.innerHTML = '<tr><td colspan="7" class="note">Nenhuma conta encontrada.</td></tr>';
+    if (!list.length) tb.innerHTML = '<tr><td colspan="6" class="note">Nenhuma conta encontrada.</td></tr>';
   }
 
   async function importEnglish() {
@@ -428,9 +424,23 @@ code{background:#fff6d6;border-radius:6px;padding:1px 6px}
       if (error) { $("#importbtn").disabled = false; return msg("#importmsg", "Parou no documento " + (done + 1) + ": " + error.message); }
       done += Math.min(200, docs.length - i);
     }
+    // abre as turmas: decifra as chaves da escola e publica as de cada turma (só os alunos dela leem)
+    let levels = 0;
+    try {
+      const owner = docs.find(d => d.path === "admin/owner"), sk = docs.find(d => d.path === "school/keys");
+      if (owner && sk) {
+        const b64 = x => Uint8Array.from(atob(x), c => c.charCodeAt(0));
+        const key = await crypto.subtle.importKey("raw", b64(owner.data.dk), "AES-GCM", false, ["decrypt"]);
+        const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(sk.data.box.iv) }, key, b64(sk.data.box.ct));
+        const all = JSON.parse(new TextDecoder().decode(plain)).keys || {};
+        const by = {}; Object.entries(all).forEach(([uid, k]) => { const lv = uid.replace(/-u\d+$/, ""); (by[lv] = by[lv] || {})[uid] = k; });
+        const rows = Object.entries(by).map(([lv, keys]) => ({ site: "english", path: "levelkeys/" + lv, coll: "levelkeys", doc_id: lv, data: { keys, at: Date.now() } }));
+        const { error } = await sb.from("site_docs").upsert(rows, { onConflict: "site,path" });
+        if (!error) levels = rows.length;
+      }
+    } catch (e) { console.warn(e); }
     $("#importbtn").disabled = false;
-    const keys = docs.some(d => d.path === "admin/owner") && docs.some(d => d.path === "school/keys");
-    msg("#importmsg", done + " documentos importados." + (keys ? " As chaves das unidades estão no lugar: as aulas do English já podem abrir." : " Atenção: o arquivo não tinha admin/owner e school/keys, então as unidades continuam fechadas."), keys);
+    msg("#importmsg", done + " documentos importados." + (levels ? " " + levels + " turmas do English abertas: cada aluno já vê todas as unidades da turma dele." : " Atenção: não encontrei as chaves das unidades (admin/owner e school/keys) no arquivo."), !!levels);
   }
 
   // ---------- início ----------

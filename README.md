@@ -60,22 +60,21 @@ Em **Authentication → Users → Add user → Create new user**, coloque seu e-
 - A conta nasce com uma **senha provisória**. No primeiro acesso o site obriga a pessoa a criar a própria senha.
 - **Turmas:** ao criar (ou depois, na tabela) escolha o **nível do Español** e a **turma do English** do aluno. Ao entrar, ele já vê as turmas dele.
 - **Español:** o aluno entra direto no nível dele, sem outra senha. A professora vê o aluno no *Panel de la profesora* automaticamente e pode mudar o nível por lá também.
-- **English:** o aluno vê as unidades da turma dele (campo *English · turma*) assim que entra, sem código. Só aparecem as unidades que a gestão ou o professor **liberou** no *Release units* do English. O código de família (`LION-…`) continua funcionando para quem já tinha.
+- **English:** funciona igual ao Español. O aluno vê **todas as unidades da turma** dele (campo *English · turma*) assim que entra, sem código. Tem **Class Board** (mural), **Assignments** (tarefas com entrega), **My Grades** (notas e comentários do professor) e **News Board**. Professor e administração entram direto no **Teacher Desk**, sem código.
 - **Esqueceu a senha:** o próprio aluno usa **Esqueci minha senha** e recebe um link por e-mail.
 
 | Função | O que pode |
 |---|---|
-| Aluno(a) | estudar nas turmas dele, comentar no mural, entregar tarefas |
-| Professor(a) | criar alunos e definir turmas; *Panel de la profesora* no Español; *Teacher Desk* no English |
-| Administração | tudo do professor + criar professores e administração, mudar funções, *Management Desk* do English, importar dados |
+| Aluno(a) | estudar nas turmas dele, comentar no mural, entregar tarefas e ver as notas (nas duas plataformas) |
+| Professor(a) | criar alunos e definir turmas; *Panel de la profesora* no Español e *Teacher Desk* no English (mural, tarefas, notas, recados) |
+| Administração | tudo do professor + criar professores e administração, mudar funções, importar os dados do English |
 
 ## Chaves das aulas do English
 
-As unidades do English são **criptografadas** dentro do arquivo. As chaves ficam no banco.
+As unidades do English são **criptografadas** dentro do arquivo; as chaves ficam no banco.
 
 1. Entre no site como **administração** e use **Importar dados do English** (página inicial) com o arquivo de exportação do banco original (`…db-export.json`).
-2. Abra o English → **Staff access** → **Enter as management**.
-3. Em **Release units**, escolha a turma, marque as unidades e clique em **Save and update students**. A partir daí, os alunos daquela turma veem essas unidades. Cada turma só consegue ler as chaves dela.
+2. Pronto: o site abre as 12 turmas. Cada aluno já vê todas as unidades da turma dele, e cada turma só consegue ler as chaves dela. Professores e administração veem todas.
 
 > O arquivo de exportação contém a chave mestra das aulas: **não coloque no GitHub** (o `.gitignore` já bloqueia) e apague depois de importar.
 

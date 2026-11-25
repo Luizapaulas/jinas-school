@@ -168,11 +168,14 @@ returns text language sql immutable as $$
       when 'subs'     then 'own'
       else case when p_write then 'staff' else 'any' end end
     else case split_part(p_path, '/', 1)
-      when 'admin'    then 'admin'
+      when 'admin'     then case when p_write then 'admin' else 'staff' end
       when 'levelkeys' then case when p_write then 'staff' else 'level' end
-      when 'school'   then 'staff'
-      when 'mural'    then 'staff'
-      when 'teachers' then case when p_write then 'admin' else 'staff' end
+      when 'school'    then 'staff'
+      when 'mural'     then 'staff'
+      when 'teachers'  then case when p_write then 'admin' else 'staff' end
+      when 'comments'  then case when p_write then 'own' else 'any' end
+      when 'subs'      then 'own'
+      when 'progress'  then 'own'
       else case when p_write then 'staff' else 'any' end end
   end
 $$;
