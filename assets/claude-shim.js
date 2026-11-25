@@ -224,6 +224,28 @@
     return Object.freeze({ doc, collection });
   }
 
+  // English: a turma do aluno abre pela conta (sem código de família).
+  // Quando a gestão/professor libera unidades, as chaves liberadas de cada turma
+  // são publicadas em levelkeys/<turma>, que só os alunos daquela turma conseguem ler.
+  if (SITE === "english") {
+    window.SchoolLevelKeys = async (keys, releases) => {
+      try {
+        const levels = new Set([...Object.keys(releases || {}), ...Object.keys(keys || {}).map(k => k.replace(/-u\d+$/, ""))]);
+        for (const lv of levels) {
+          const lk = {}; (releases[lv] || []).forEach(n => { const k = keys[lv + "-u" + n]; if (k) lk[lv + "-u" + n] = k; });
+          const ref = doc("levelkeys/" + lv); const cur = await readDoc(ref.path);
+          if (JSON.stringify((cur && cur.keys) || {}) !== JSON.stringify(lk)) await ref.set({ keys: lk, at: Date.now() });
+        }
+      } catch (e) { console.warn("[School] não foi possível publicar as chaves das turmas", e); }
+    };
+    window.SchoolFamily = async () => {
+      const p = await S.profile();
+      if (!p || p.role !== "student" || !p.en_level) return null;
+      const d = await readDoc("levelkeys/" + p.en_level);
+      return { id: "acct-" + p.id, code: "", level: p.en_level, child: (p.full_name || "").split(" ")[0] || "Student", keys: (d && d.keys) || {} };
+    };
+  }
+
   // English: abre a turma do aluno pelo código salvo na conta (sem digitar de novo)
   async function linkEnglish(s) {
     const ls = window.localStorage;

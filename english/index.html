@@ -274,7 +274,7 @@ const normEmail = e => String(e || '').trim().toLowerCase();
 async function teacherId(email, code){ return (await sha('jinas-teacher:' + normEmail(email) + '|' + normCode(code))).slice(0, 32); }
 async function loadSchool(){
   const s = await ACC.db.doc('school/keys').get(); if (!s.exists) throw new Error('The school database is not set up yet.');
-  const d = await decK(await dkKey(), s.data().box); ACC.keys = d.keys || {}; ACC.releases = d.releases || {}; Object.keys(UNIT_CACHE).forEach(k => delete UNIT_CACHE[k]); }
+  const d = await decK(await dkKey(), s.data().box); ACC.keys = d.keys || {}; ACC.releases = d.releases || {}; Object.keys(UNIT_CACHE).forEach(k => delete UNIT_CACHE[k]); if (window.SchoolLevelKeys) window.SchoolLevelKeys(ACC.keys, ACC.releases); }
 async function loginMgmt(){
   if (!ACC.db) throw new Error('Open this website from the school link while signed in to your Jinas School account.');
   let s; try { s = await ACC.db.doc('admin/owner').get(); } catch(e) { s = null; }
@@ -312,7 +312,8 @@ function renderWho(){
       if (user) { try { ACC.owner = await user.canEdit(); } catch(e) {} }
       const st = storeGet('jinasStaff');
       if (st && db) { try { const o = JSON.parse(st); if (o.role === 'mgmt') { ACC.dk = o.dk; ACC.role = 'mgmt'; ACC.staff = {name:'Management'}; await loadSchool(); } else await loginTeacher(o.email, o.code); } catch(e) { logoutStaff(); } }
-      const saved = storeGet('jinasFamilyCode'); if (saved && db && !ACC.role) { try { await loadFamily(saved); } catch(e) { storeSet('jinasFamilyCode', null); } }
+      if (db && !ACC.role && window.SchoolFamily) { try { const f = await window.SchoolFamily(); if (f) ACC.family = f; } catch(e) {} }
+      const saved = storeGet('jinasFamilyCode'); if (saved && db && !ACC.role && !ACC.family) { try { await loadFamily(saved); } catch(e) { storeSet('jinasFamilyCode', null); } }
     } catch(e) {}
     try { TTS = await claude.use('tts'); } catch(e) { TTS = null; }
     $('#pEngine').textContent = TTS ? 'AI-generated voice (Claude)' : 'AI-generated voice';
@@ -918,7 +919,7 @@ function deskView(){
 const regRef = () => ACC.db.doc('school/registry');
 async function readReg(){ const s = await regRef().get(); DESK.reg = s.exists ? await decK(await dkKey(), s.data().box) : {teachers:[], students:[]}; DESK.reg.teachers ||= []; DESK.reg.students ||= []; }
 async function writeReg(){ await regRef().set({box: await encK(await dkKey(), DESK.reg), at:Date.now()}); }
-async function writeKeys(){ await ACC.db.doc('school/keys').set({box: await encK(await dkKey(), {keys:ACC.keys, releases:ACC.releases}), at:Date.now()}); }
+async function writeKeys(){ await ACC.db.doc('school/keys').set({box: await encK(await dkKey(), {keys:ACC.keys, releases:ACC.releases}), at:Date.now()}); if (window.SchoolLevelKeys) await window.SchoolLevelKeys(ACC.keys, ACC.releases); }
 function myStudents(){ const all = DESK.reg.students; return isMgmt() ? all : all.filter(s => s.teacher === ACC.staff.email); }
 function startDesk(){
   if (!ACC.role || !ACC.db) return;

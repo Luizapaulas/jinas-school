@@ -60,7 +60,7 @@ Em **Authentication → Users → Add user → Create new user**, coloque seu e-
 - A conta nasce com uma **senha provisória**. No primeiro acesso o site obriga a pessoa a criar a própria senha.
 - **Turmas:** ao criar (ou depois, na tabela) escolha o **nível do Español** e a **turma do English** do aluno. Ao entrar, ele já vê as turmas dele.
 - **Español:** o aluno entra direto no nível dele, sem outra senha. A professora vê o aluno no *Panel de la profesora* automaticamente e pode mudar o nível por lá também.
-- **English:** as unidades abrem com o **código de acesso da família** (ex.: `LION-AB12-CD34`), gerado pela gestão no *Management Desk* do English. Coloque o código no cadastro do aluno; se o aluno digitar o código uma vez no English, ele também fica salvo na conta.
+- **English:** o aluno vê as unidades da turma dele (campo *English · turma*) assim que entra, sem código. Só aparecem as unidades que a gestão ou o professor **liberou** no *Release units* do English. O código de família (`LION-…`) continua funcionando para quem já tinha.
 - **Esqueceu a senha:** o próprio aluno usa **Esqueci minha senha** e recebe um link por e-mail.
 
 | Função | O que pode |
@@ -71,11 +71,13 @@ Em **Authentication → Users → Add user → Create new user**, coloque seu e-
 
 ## Chaves das aulas do English
 
-As unidades do English são **criptografadas** dentro do arquivo. As chaves que as abrem ficavam no banco do site original no Claude (documentos `admin/owner` e `school/keys`), junto com famílias, professores e recados. Sem elas, as unidades não abrem.
+As unidades do English são **criptografadas** dentro do arquivo. As chaves ficam no banco.
 
-Para trazer: quem é **dono(a) do site original** pede ao Claude, na conta dele(a), para exportar o banco do artifact *English w/ School* em JSON no formato `{ "caminho/do/documento": { ...dados... } }`. Depois, quem é da administração entra no site e usa **Importar dados do English** na página inicial.
+1. Entre no site como **administração** e use **Importar dados do English** (página inicial) com o arquivo de exportação do banco original (`…db-export.json`).
+2. Abra o English → **Staff access** → **Enter as management**.
+3. Em **Release units**, escolha a turma, marque as unidades e clique em **Save and update students**. A partir daí, os alunos daquela turma veem essas unidades. Cada turma só consegue ler as chaves dela.
 
-> Esse arquivo contém a chave mestra das aulas: **não coloque no GitHub** e apague depois de importar.
+> O arquivo de exportação contém a chave mestra das aulas: **não coloque no GitHub** (o `.gitignore` já bloqueia) e apague depois de importar.
 
 ## Testar no computador
 

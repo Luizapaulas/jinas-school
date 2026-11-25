@@ -154,6 +154,7 @@ create trigger on_profile_changed after update on public.profiles
 -- 6) Regras dos dados das plataformas (as mesmas dos sites originais)
 --  'any' = qualquer conta logada | 'own' = o próprio aluno ou professor
 --  'staff' = professor ou administração | 'admin' = só administração
+--  'level' = alunos daquela turma do English (chaves das unidades liberadas)
 create or replace function public.doc_rule(p_site text, p_path text, p_write boolean)
 returns text language sql immutable as $$
   select case
@@ -168,6 +169,7 @@ returns text language sql immutable as $$
       else case when p_write then 'staff' else 'any' end end
     else case split_part(p_path, '/', 1)
       when 'admin'    then 'admin'
+      when 'levelkeys' then case when p_write then 'staff' else 'level' end
       when 'school'   then 'staff'
       when 'mural'    then 'staff'
       when 'teachers' then case when p_write then 'admin' else 'staff' end
@@ -180,6 +182,8 @@ returns boolean language sql stable security definer set search_path = public as
   select auth.uid() is not null and case public.doc_rule(p_site, p_path, p_write)
     when 'any'   then true
     when 'own'   then split_part(p_path, '/', 2) = auth.uid()::text or public.is_teacher()
+    when 'level' then public.is_teacher()
+                      or exists (select 1 from public.profiles where id = auth.uid() and en_level = split_part(p_path, '/', 2))
     when 'staff' then public.is_teacher()
     when 'admin' then public.is_admin()
     else false end
