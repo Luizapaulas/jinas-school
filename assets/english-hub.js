@@ -88,7 +88,7 @@
   async function deskView() {
     setNav("desk"); crumbs([["Teacher Desk"]]); await me();
     if (!staff()) return `<h1>Teacher Desk</h1><div class="card">This area is for teachers and the school management.</div>`;
-    const tabs = [["students", "👩‍🎓 Students"], ["board", "💬 Class Board"], ["tasks", "📎 Assignments"], ["subs", "📨 Submissions & grades"], ["news", "📣 Class news"], ["mural", "📌 Teachers' mural"]];
+    const tabs = deskTabs;
     return `<h1>${ACC.role === "mgmt" ? "Management & Teacher Desk" : "Teacher Desk"}</h1>
       <p class="note">Students and classes are managed on the <a href="../index.html">Jinas School home page</a> (Create access). All units of each class are open to its students.</p>
       <div class="hub-tabs">${tabs.map(([k, t]) => `<button data-hubtab="${k}" aria-pressed="${H.tab === k}">${t}</button>`).join("")}</div>
@@ -132,27 +132,32 @@
     box.innerHTML = `<div class="grid3" style="margin-bottom:14px"><div class="card"><div class="hub-grade">${rows.length}</div><span class="note">assignments sent</span></div>
         <div class="card"><div class="hub-grade">${graded.length}</div><span class="note">graded</span></div><div class="card"><div class="hub-grade">${avg}</div><span class="note">average grade</span></div></div>
       <div class="card"><table><thead><tr><th>Assignment</th><th>Sent</th><th>Grade</th><th>Feedback</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td>${esc(r.title)}</td><td>${when(r.at)}</td><td><b>${esc(fmtGrade(r.grade))}</b></td><td>${esc(r.fb || "")}</td></tr>`).join("") || '<tr><td colspan="4">You have not sent any assignment yet.</td></tr>'}</tbody></table></div>`;
+      ${rows.map(r => `<tr><td>${esc(r.title)}</td><td>${when(r.at)}</td><td><b>${esc(fmtGrade(r.grade))}</b></td><td>${esc(r.fb || "")}</td></tr>`).join("") || '<tr><td colspan="4">You have not sent any assignment yet.</td></tr>'}</tbody></table></div>` + (ext.gradesExtra ? ext.gradesExtra() : "");
   }
   function drawNews() {
     const box = $("#hubNews"); if (!box) return;
     const list = H.news.filter(forMe).sort((a, b) => b.at - a.at);
     box.innerHTML = list.map(n => `<div class="news"><time>${when(n.at)} · ${esc(lvName(n.level))}</time><h4>${esc(n.title)}</h4><p style="white-space:pre-wrap;margin:0">${esc(n.text)}</p></div>`).join("") || '<p class="note">No news yet.</p>';
   }
+  const deskTabs = [["students", "👩‍🎓 Students"], ["board", "💬 Class Board"], ["tasks", "📎 Assignments"], ["subs", "📨 Submissions & grades"], ["news", "📣 Class news"], ["mural", "📌 Teachers' mural"]];
+  const deskDraw = {};
+  const ext = { deskStudentCols: null, gradesExtra: null };
   function drawDesk() {
     const box = $("#hubDesk"); if (!box) return;
     const t = H.tab;
     const lvSel = (name, all) => `<select name="${name}">${levelOpts("", all)}</select>`;
+    if (deskDraw[t]) { deskDraw[t](box); return; }
     if (t === "students") {
       const by = {}; H.students.forEach(s => (by[s.en_level || "—"] = by[s.en_level || "—"] || []).push(s));
       const subsOf = id => Object.values((H.subs.find(x => x.pid === id) || {}).items || {});
       box.innerHTML = `<div class="card"><h2>Students (${H.students.length})</h2><p class="note">To add a student or change their class, use <b>Create access</b> and <b>School accounts</b> on the <a href="../index.html">home page</a>.</p>
-        <div style="overflow-x:auto"><table><thead><tr><th>Student</th><th>E-mail</th><th>Class</th><th>Sent</th><th>Graded</th><th>Average</th></tr></thead><tbody>
+        <div style="overflow-x:auto"><table><thead><tr><th>Student</th><th>E-mail</th><th>Class</th><th>Assignments sent</th><th>Graded</th><th>Assignment avg</th><th>Exercise sets</th><th>Exercise avg</th></tr></thead><tbody>
         ${LEVELS.filter(l => by[l.id]).concat(by["—"] ? [{ id: "—", name: "No class" }] : []).map(l => by[l.id].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "")).map(s => {
           const it = subsOf(s.id); const g = it.filter(x => x.grade != null && x.grade !== "" && !isNaN(parseFloat(String(x.grade).replace(",", "."))));
           const avg = g.length ? (g.reduce((a, x) => a + parseFloat(String(x.grade).replace(",", ".")), 0) / g.length).toFixed(1).replace(".", ",") : "—";
-          return `<tr><td>${esc(s.full_name || "—")}</td><td>${esc(s.email || "")}</td><td>${esc(l.name)}</td><td>${it.length}</td><td>${g.length}</td><td>${avg}</td></tr>`;
-        }).join("")).join("") || '<tr><td colspan="6">No students in English classes yet.</td></tr>'}</tbody></table></div></div>`;
+          const ex = ext.deskStudentCols ? ext.deskStudentCols(s) : ["—", "—"];
+          return `<tr><td>${esc(s.full_name || "—")}</td><td>${esc(s.email || "")}</td><td>${esc(l.name)}</td><td>${it.length}</td><td>${g.length}</td><td>${avg}</td><td>${ex[0]}</td><td>${ex[1]}</td></tr>`;
+        }).join("")).join("") || '<tr><td colspan="8">No students in English classes yet.</td></tr>'}</tbody></table></div></div>`;
     } else if (t === "board") {
       box.innerHTML = `<div class="card"><h2>New weekly topic</h2><form class="form" data-hubform="theme"><input name="title" required maxlength="200" placeholder="Topic title"><textarea name="text" required rows="4" maxlength="4000" placeholder="Text, questions to discuss…"></textarea>
         <div class="row">${lvSel("level", true)}<button class="btn">Post topic</button></div></form></div>
@@ -188,8 +193,10 @@
     });
   }
 
+  const afterHooks = [];
   function after(h) {
     if (h === "levels" || h === "home") myClassFirst();
+    afterHooks.forEach(f => { try { f(h); } catch (e) { console.warn(e); } });
     if (!["board", "tasks", "grades", "news", "desk"].includes(h) || !db()) return;
     const d = db();
     sub(d.collection("themes"), s => { H.themes = s.docs.map(x => ({ id: x.id, ...x.data() })); redraw(); });
@@ -252,5 +259,8 @@
     if (btn) btn.disabled = false;
   });
 
-  window.EnglishHub = { views: { board: boardView, tasks: tasksView, grades: gradesView, news: newsView, desk: deskView }, after };
+  const X = { H, when, lvName, levelOpts, me, sub, toast, redraw: () => redraw(), deskTabs, deskDraw, afterHooks };
+  Object.defineProperty(X, "deskStudentCols", { set: f => { ext.deskStudentCols = f; } });
+  Object.defineProperty(X, "gradesExtra", { set: f => { ext.gradesExtra = f; } });
+  window.EnglishHub = { views: { board: boardView, tasks: tasksView, grades: gradesView, news: newsView, desk: deskView }, after, _: X };
 })();
