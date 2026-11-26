@@ -273,7 +273,7 @@ const ACC = {db:null, user:null, owner:false, role:null, staff:null, dk:null, ke
 function keyFor(uid){ if (PREVIEW_KEYS) return PREVIEW_KEYS[uid]; if (ACC.role) return ACC.keys[uid]; return ACC.family && ACC.family.keys ? ACC.family.keys[uid] : null; }
 const isStaff = () => !!PREVIEW_KEYS || !!ACC.role;
 const isMgmt = () => ACC.role === 'mgmt';
-const canOpen = id => isStaff() || (ACC.family && ACC.family.level === id);
+const canOpen = id => isStaff() || (ACC.family && (ACC.family.level === id || (ACC.family.done || []).includes(id)));
 const released = uid => !!keyFor(uid);
 async function pbk(secret, salt, iter){ const base = await crypto.subtle.importKey('raw', te.encode(secret), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2', salt:te.encode(salt), iterations:iter, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); }
@@ -815,7 +815,7 @@ function home(){
 function levelsView(){ setNav('levels'); crumbs([['My Classes']]);
   return `<h1>My Classes</h1><p class="note">${ACC.family ? `Your family has access to <b>${esc(LV[ACC.family.level]?.name)}</b>.` : isStaff() ? 'Teacher view: all classes are open.' : 'Your account is not in an English class yet. Ask your teacher.'}</p>${codeCard()}
   <div class="levels">${LEVELS.map(l => `<button class="level ${canOpen(l.id) ? '' : 'locked'}" style="--c:${l.color}" data-go="${l.id}"><span class="age">${l.age} · ${l.cefr}</span><h3>English w/ School · ${l.name}</h3><span class="note">${l.about}</span><span class="badge ${canOpen(l.id) ? 'ok' : 'lock'}">${canOpen(l.id) ? (unitCount(l) ? unitCount(l) + ' units' : 'Content coming soon') : 'Enrolled students only'}</span></button>`).join('')}</div>`; }
-function lockedLevel(l){ return `<div class="card"><h2>This class is for enrolled students</h2><p>English w/ School · ${esc(l.name)} is open only to the students enrolled in this class.</p></div>${codeCard()}`; }
+function lockedLevel(l){ if (window.EnglishHub && EnglishHub.lockedMsg) { const m = EnglishHub.lockedMsg(l); if (m) return m; } return `<div class="card"><h2>This class is for enrolled students</h2><p>English w/ School · ${esc(l.name)} is open only to the students enrolled in this class.</p></div>${codeCard()}`; }
 function levelView(l){
   setNav('levels'); crumbs([['My Classes','levels'],[l.name]]);
   if (!canOpen(l.id)) return lockedLevel(l);

@@ -178,11 +178,12 @@
   }
   async function grammarView() {
     setNav("grammar"); crumbs([["Grammar"]]);
-    const lv = staff() ? (H.gramLv || "basic-one") : (ACC.family && ACC.family.level);
+    const open = staff() ? LEVELS.map(l => l.id) : (ACC.family ? [ACC.family.level, ...(ACC.family.done || []).slice().reverse()] : []);
+    const lv = open.includes(H.gramLv) ? H.gramLv : staff() ? "basic-one" : open[0];
     if (!lv) return `<h1>Grammar</h1><div class="card">Your account is not in an English class yet.</div>`;
     H.gramLv = lv;
     return `<h1>Grammar · ${esc(X.lvName(lv))}</h1><p class="note">All the grammar of the class in one place, unit by unit.</p>
-      ${staff() ? `<div class="row" style="margin-bottom:12px"><label class="note">Class</label><select id="xgLv" style="width:auto">${LEVELS.map(l => `<option value="${l.id}" ${l.id === lv ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>` : ""}
+      ${open.length > 1 ? `<div class="row" style="margin-bottom:12px"><label class="note" for="xgLv">Class</label><select id="xgLv" style="width:auto">${open.map(id => `<option value="${id}" ${id === lv ? "selected" : ""}>${esc(X.lvName(id))}</option>`).join("")}</select></div>` : ""}
       <div id="xgBox"><p class="note">Loading…</p></div>`;
   }
   async function drawGrammar() {
@@ -204,11 +205,12 @@
   }
   async function mediaView() {
     setNav("media"); crumbs([["Videos & Music"]]);
-    const lv = staff() ? (H.mediaLv || LEVELS.find(l => SUMMARY[l.id])?.id) : (ACC.family && ACC.family.level);
+    const open = staff() ? LEVELS.map(l => l.id) : (ACC.family ? [ACC.family.level, ...(ACC.family.done || []).slice().reverse()] : []);
+    const lv = open.includes(H.mediaLv) ? H.mediaLv : staff() ? "basic-one" : open[0];
     if (!lv) return `<h1>Videos & Music</h1><div class="card">Your account is not in an English class yet.</div>`;
     H.mediaLv = lv;
     return `<h1>Videos, music & films · ${esc(X.lvName(lv))}</h1><p class="note">Films, series, songs and YouTube videos for each unit. Links open YouTube or a search in a new tab.</p>
-      ${staff() ? `<div class="row" style="margin-bottom:12px"><label class="note">Class</label><select id="xmLv" style="width:auto">${LEVELS.map(l => `<option value="${l.id}" ${l.id === lv ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>` : ""}
+      ${open.length > 1 ? `<div class="row" style="margin-bottom:12px"><label class="note" for="xmLv">Class</label><select id="xmLv" style="width:auto">${open.map(id => `<option value="${id}" ${id === lv ? "selected" : ""}>${esc(X.lvName(id))}</option>`).join("")}</select></div>` : ""}
       <div id="xmBox"><p class="note">Loading…</p></div>`;
   }
   const yt = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);

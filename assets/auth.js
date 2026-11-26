@@ -98,5 +98,20 @@
     document.body.prepend(bar);
   }
 
-  window.School = { sb, configured, demo, newClient, ROOT, session, profile, requireLogin, signOut, mountBar };
+  // Caminho de níveis do English: concluídos (antes do atual) e próximos (depois)
+  const EN_PATHS = {
+    kids:  ["babies-one", "babies-two", "juniors-one", "juniors-two", "younger-two", "younger-three", "intermediate", "advanced", "master"],
+    young: ["younger-one", "younger-two", "younger-three", "intermediate", "advanced", "master"],
+    adult: ["basic-one", "basic-two", "intermediate", "advanced", "master"]
+  };
+  function enPath(cur) {
+    if (!cur) return { done: [], next: [] };
+    const path = /^(babies|juniors)/.test(cur) ? EN_PATHS.kids : /^younger/.test(cur) ? EN_PATHS.young : EN_PATHS.adult;
+    const i = path.indexOf(cur); if (i < 0) return { done: [], next: [] };
+    return { done: path.slice(0, i), next: path.slice(i + 1) };
+  }
+  const ES_LEVELS = ["A1", "A2", "B1", "B2", "C1"];
+  function esPath(cur) { const i = ES_LEVELS.indexOf(cur); return i < 0 ? { done: [], next: [] } : { done: ES_LEVELS.slice(0, i), next: ES_LEVELS.slice(i + 1) }; }
+
+  window.School = { sb, configured, demo, newClient, enPath, esPath, ROOT, session, profile, requireLogin, signOut, mountBar };
 })();

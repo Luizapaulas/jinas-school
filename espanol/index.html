@@ -5,7 +5,7 @@
 <script src="../assets/config.js"></script>
 <script src="../assets/auth.js"></script>
 <script src="../assets/claude-shim.js" data-site="espanol"></script>
-<style>#logout,[data-stpass]{display:none!important}#top .who .chip{white-space:nowrap}@media (max-width:640px){#top .who{display:none}#top{gap:8px;padding:8px 12px}#top .levels{overflow-x:auto;scrollbar-width:none}}</style>
+<style>#logout,[data-stpass]{display:none!important}#top .who .chip{white-space:nowrap}.levels .lv.done{background:#e8f6ec;border-color:#9fd6ad;color:#14532d}@media (max-width:640px){#top .who{display:none}#top{gap:8px;padding:8px 12px}#top .levels{overflow-x:auto;scrollbar-width:none}}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Español con School · Plataforma Jinas School (Copy)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
@@ -390,15 +390,18 @@ async function saveScore(id, s, m, title) {
 function writeFail(e) { if (e && e.code === "invalid_argument") { S.canWrite = false; toast("Tu cuenta solo puede ver: pide a la profesora acceso para participar.", 1); } else toast("No se pudo guardar. Inténtalo de nuevo.", 1); }
 
 /* ============ Layout ============ */
+// Niveles: el actual y los anteriores (concluidos, para repasar) están abiertos; los siguientes, cerrados
+function canLv(l) { if (S.teacher) return true; if (!S.student) return false; return LEVELS.indexOf(l) >= 0 && LEVELS.indexOf(l) <= LEVELS.indexOf(S.student.level); }
+function lvState(l) { if (S.teacher || !S.student) return ""; const i = LEVELS.indexOf(l), c = LEVELS.indexOf(S.student.level); return i < c ? "done" : i > c ? "next" : "now"; }
 function shell() {
-  const lv = S.level; const unlocked = S.teacher || (S.student && S.student.level === lv);
+  const lv = S.level; const unlocked = canLv(lv);
   const nav = [["inicio", "🏠", "Inicio"], ["unidades", "📚", "Unidades"], ["practica", "🔁", "Práctica de verbos"], ["gramatica", "🧩", "Consulta gramatical"], ["dele", "🎓", "Simulacros DELE"], ["redaccion", "✍️", "Redacción"], ["mural", "💬", "Mural"], ["tareas", "📎", "Tareas"], ["multimedia", "🎬", "Vídeos, música y cine"], ["calendario", "📅", "Calendario"], ["notas", "📊", "Mis notas"], ["contacto", "✉️", "Contacto"]];
   if (S.teacher) nav.push(["profesora", "🛠️", "Panel de la profesora"]);
   return `<aside id="side"><div class="brand"><img src="${DATA.logo}" alt="Jinas School"><div><b>Español con</b><span>School</span></div></div>
    <nav>${nav.map(([k, ic, t]) => `<a href="#${k}" class="${S.view === k || (k === "unidades" && /^unidad-/.test(S.view)) || (k === "dele" && /^dele-/.test(S.view)) ? "act" : ""}"><span>${ic}</span>${t}</a>`).join("")}</nav>
    <div class="side-foot">Jinas School · Plataforma de español<br><a href="mailto:${EMAIL}">${EMAIL}</a></div></aside>
    <header id="top"><button id="menu" aria-label="Menú">☰</button>
-    <div class="levels">${LEVELS.map(l => { const can = S.teacher || (S.student && S.student.level === l); return `<button class="lv ${l === lv ? "act" : ""} ${can ? "" : "lock"}" data-level="${l}" title="${can ? "Nivel " + l : "Solo para alumnos de este nivel"}">${can ? "" : "🔒 "}${l}</button>`; }).join("")}</div>
+    <div class="levels">${LEVELS.map(l => { const can = canLv(l); const st = lvState(l); return `<button class="lv ${l === lv ? "act" : ""} ${can ? "" : "lock"} ${st === "done" ? "done" : ""}" data-level="${l}" title="${st === "done" ? "Nivel " + l + " · concluido, puedes repasarlo" : st === "next" ? "Nivel " + l + " · se abre cuando termines el " + (S.student ? S.student.level : "") : "Nivel " + l}">${st === "done" ? "✓ " : can ? "" : "🔒 "}${l}</button>`; }).join("")}</div>
     <div class="who">${S.teacher ? `<span class="chip t">Profesora</span>` : S.student ? `<span class="chip">${esc(S.student.name)} · ${S.student.level}</span><button class="ghost sm" id="logout">Salir</button>` : `<span class="chip g">Invitado</span>`}</div></header>
    <main id="main">${unlocked || ["inicio", "calendario", "contacto"].includes(S.view) ? viewHTML() : lockedHTML()}</main>`;
 }
@@ -406,7 +409,7 @@ function lockedHTML() {
   if (!S.ready) return `<div class="card center"><div class="spin"></div><p>Conectando con la plataforma…</p></div>`;
   if (!S.db) return `<div class="card center narrow"><h2>Acceso de alumnos</h2><p>Tu cuenta todavía no tiene un nivel de español. Pide a tu profesora que te incluya en una clase.</p><p class="small">Si tienes problemas, escribe a <b>${EMAIL}</b>.</p></div>`;
   if (!S.student && !S.teacher) return loginHTML();
-  return `<div class="card center narrow"><h2>🔒 Nivel ${S.level}</h2><p>Este nivel está reservado para los alumnos de ${S.level}. Tú estás en el nivel <b>${S.student.level}</b>.</p><button class="btn" data-level="${S.student.level}">Ir a mi nivel</button></div>`;
+  return `<div class="card center narrow"><h2>🔒 Nivel ${S.level}</h2><p>El nivel ${S.level} se abre cuando termines el nivel <b>${S.student.level}</b>. ¡Sigue así!</p><button class="btn" data-level="${S.student.level}">Ir a mi nivel</button></div>`;
 }
 function loginHTML() {
   return `<div class="login card narrow"><img src="${DATA.logo}" class="lg"><h2>¡Bienvenido/a a <em>Español con School</em>!</h2><p>Tu cuenta todavía no está en ninguna clase de español. Pide a tu profesora que te incluya en un nivel y vuelve a entrar.</p>
@@ -694,7 +697,7 @@ document.addEventListener("click", async e => {
   const d = t.dataset;
   if (t.id === "menu") { document.body.classList.toggle("nav-open"); return; }
   if (t.closest("#side nav")) document.body.classList.remove("nav-open");
-  if (d.level) { const can = S.teacher || (S.student && S.student.level === d.level); if (!can) { toast("Solo puedes entrar en tu nivel.", 1); return; } S.level = d.level; render(); return; }
+  if (d.level) { const can = canLv(d.level); if (!can) { toast("El nivel " + d.level + " se abre cuando termines el " + (S.student ? S.student.level : "") + ".", 1); return; } S.level = d.level; render(); return; }
   if (d.utab) { const [n, k] = d.utab.split(":"); S.unitTab[n] = k; render(); return; }
   if (d.check) { correct(d.check); return; }
   if (d.reset) { const box = $("#ex-" + d.reset); box.outerHTML = exHTML(EX[d.reset]); return; }

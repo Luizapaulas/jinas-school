@@ -9,6 +9,7 @@
 //  Dados (site "english"): themes, comments/<uid>, tasks, subs/<uid>, announcements, mural
 // =============================================================
 (function () {
+  let EnglishHub_lockedMsg = null;
   const H = { tab: "students", students: [], themes: [], comments: [], tasks: [], subs: [], news: [], mural: [], me: null };
   const db = () => ACC.db;
   const staff = () => !!ACC.role;
@@ -183,15 +184,32 @@
   const redraw = () => { drawThemes(); drawTasks(); drawGrades(); drawNews(); drawDesk(); };
 
   // ---------------- Dados ao vivo ----------------
-  // A turma do aluno aparece primeiro, destacada, em "My Classes" e na página inicial
+  // Turmas que o aluno vê: a atual, as concluídas (abertas para revisão) e as próximas (trancadas).
+  // Turmas de outros caminhos (ex.: as infantis para um adulto) não aparecem.
   function myClassFirst() {
-    const lv = ACC.family && ACC.family.level; if (!lv || staff()) return;
+    const f = ACC.family; const lv = f && f.level; if (!lv || staff()) return;
+    const done = f.done || [], next = f.next || [];
     document.querySelectorAll(".levels").forEach(box => {
-      const mine = box.querySelector(`.level[data-go="${lv}"]`); if (!mine) return;
-      box.prepend(mine); mine.classList.add("hub-mine");
-      if (!mine.querySelector(".hub-badge")) { const b = document.createElement("span"); b.className = "badge ok hub-badge"; b.textContent = "Your class"; mine.appendChild(b); }
+      box.querySelectorAll(".level[data-go]").forEach(b => {
+        const id = b.dataset.go; const st = id === lv ? "now" : done.includes(id) ? "done" : next.includes(id) ? "next" : "";
+        if (!st) { b.remove(); return; }
+        b.querySelectorAll(".badge.lock").forEach(x => x.remove());
+        if (!b.querySelector(".hub-badge")) {
+          const t = document.createElement("span"); t.className = "badge hub-badge " + (st === "next" ? "lock" : "ok");
+          t.textContent = st === "now" ? "Your class" : st === "done" ? "Completed · review anytime" : "Next · opens after " + lvName(lv); b.appendChild(t);
+        }
+        b.classList.toggle("hub-mine", st === "now");
+        b.style.order = st === "now" ? -2 : st === "done" ? 1 : 2;
+      });
+      const mine = box.querySelector(`.level[data-go="${lv}"]`); if (mine) box.prepend(mine);
+      box.style.display = "grid";
     });
   }
+  EnglishHub_lockedMsg = l => {
+    const f = ACC.family; if (staff() || !f) return null;
+    if ((f.next || []).includes(l.id)) return `<div class="card"><h2>🔒 ${esc(l.name)} opens later</h2><p>This class opens after you finish <b>${esc(lvName(f.level))}</b>. Keep going!</p><button class="btn" data-go="${esc(f.level)}">Go to my class</button></div>`;
+    return `<div class="card"><h2>This class is not part of your path</h2><p>Your class is <b>${esc(lvName(f.level))}</b>.</p><button class="btn" data-go="${esc(f.level)}">Go to my class</button></div>`;
+  };
 
   const afterHooks = [];
   function after(h) {
@@ -262,5 +280,5 @@
   const X = { H, when, lvName, levelOpts, me, sub, toast, redraw: () => redraw(), deskTabs, deskDraw, afterHooks };
   Object.defineProperty(X, "deskStudentCols", { set: f => { ext.deskStudentCols = f; } });
   Object.defineProperty(X, "gradesExtra", { set: f => { ext.gradesExtra = f; } });
-  window.EnglishHub = { views: { board: boardView, tasks: tasksView, grades: gradesView, news: newsView, desk: deskView }, after, _: X };
+  window.EnglishHub = { views: { board: boardView, tasks: tasksView, grades: gradesView, news: newsView, desk: deskView }, after, lockedMsg: l => EnglishHub_lockedMsg && EnglishHub_lockedMsg(l), _: X };
 })();

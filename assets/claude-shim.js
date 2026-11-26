@@ -241,8 +241,9 @@
     window.SchoolFamily = async () => {
       const p = await S.profile();
       if (!p || p.role !== "student" || !p.en_level) return null;
-      const d = await readDoc("levelkeys/" + p.en_level);
-      return { id: "acct-" + p.id, code: "", level: p.en_level, child: (p.full_name || "").split(" ")[0] || "Student", keys: (d && d.keys) || {} };
+      const { done } = S.enPath(p.en_level); const keys = {};
+      for (const lv of [...done, p.en_level]) { const d = await readDoc("levelkeys/" + lv); Object.assign(keys, (d && d.keys) || {}); }
+      return { id: "acct-" + p.id, code: "", level: p.en_level, done, next: S.enPath(p.en_level).next, child: (p.full_name || "").split(" ")[0] || "Student", keys };
     };
     window.SchoolStaff = async () => {
       const p = await S.profile();

@@ -180,13 +180,25 @@ returns text language sql immutable as $$
   end
 $$;
 
+-- Níveis do English que o aluno já concluiu (todos antes do atual no caminho dele)
+create or replace function public.en_done_levels(cur text)
+returns text[] language sql immutable as $$
+  select case when cur is null then array[]::text[] else
+    (select c[1:coalesce(array_position(c, cur), 1) - 1] from (select case
+      when cur like 'babies%' or cur like 'juniors%' then array['babies-one','babies-two','juniors-one','juniors-two','younger-two','younger-three','intermediate','advanced','master']
+      when cur like 'younger%' then array['younger-one','younger-two','younger-three','intermediate','advanced','master']
+      else array['basic-one','basic-two','intermediate','advanced','master'] end as c) t)
+  end
+$$;
+
 create or replace function public.can_doc(p_site text, p_path text, p_write boolean)
 returns boolean language sql stable security definer set search_path = public as $$
   select auth.uid() is not null and case public.doc_rule(p_site, p_path, p_write)
     when 'any'   then true
     when 'own'   then split_part(p_path, '/', 2) = auth.uid()::text or public.is_teacher()
     when 'level' then public.is_teacher()
-                      or exists (select 1 from public.profiles where id = auth.uid() and en_level = split_part(p_path, '/', 2))
+                      or exists (select 1 from public.profiles where id = auth.uid()
+                                 and (en_level = split_part(p_path, '/', 2) or split_part(p_path, '/', 2) = any(public.en_done_levels(en_level))))
     when 'staff' then public.is_teacher()
     when 'admin' then public.is_admin()
     else false end
