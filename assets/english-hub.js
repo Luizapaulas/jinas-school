@@ -38,6 +38,22 @@
   .hub-task .st{font-size:13px;font-weight:700}
   .hub-grade{font:800 22px var(--display);color:var(--red)}
   #who .linkbtn{display:none}
+  /* Turmas infantis: o conteúdo continua com o visual infantil, mas a moldura (menu e barra) fica igual às outras turmas */
+  @media (min-width:861px){
+    body.kids #side{position:fixed!important;inset:var(--sbh,0) auto 0 0!important;width:var(--side)!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;background:var(--ink)!important;color:#fff!important;padding:0!important;overflow:auto!important}
+    body.kids #top{margin-left:var(--side)!important;position:sticky!important;background:rgba(251,248,243,.94)!important;border-bottom:1px solid var(--line)!important;padding:10px 26px!important;backdrop-filter:blur(6px)!important}
+    body.kids main{margin:0 0 0 var(--side)!important;max-width:calc(1180px + var(--side))!important}
+    body.kids .player{left:var(--side)!important}
+    body.kids .side-foot{display:block!important}
+  }
+  body.kids #side{background:var(--ink)!important}
+  body.kids .brand{border-bottom:1px solid rgba(255,255,255,.1)!important;color:#fff!important;padding:16px!important}
+  body.kids .brand b{color:inherit!important;opacity:.75!important;font:500 12px var(--display)!important}
+  body.kids .brand span{color:var(--gold)!important;font:800 20px/1.05 var(--display)!important}
+  body.kids #side nav{flex-direction:column!important;flex-wrap:nowrap!important;margin-left:0!important;gap:2px!important;padding:10px!important}
+  body.kids #side nav button{border:0!important;background:none!important;color:#e9edf5!important;border-radius:10px!important;padding:10px 12px!important;font:600 14.5px var(--body)!important;box-shadow:none!important;text-align:left!important}
+  body.kids #side nav button:hover{background:rgba(255,255,255,.08)!important}
+  body.kids #side nav button[aria-current="page"]{background:linear-gradient(90deg,var(--red),var(--coral))!important;color:#fff!important}
   #view.hubpage .card,#view.hubpage .news,#view.hubpage .ex{border-top:6px solid var(--c);border-radius:16px}
   #view.hubpage .uhead .kick{display:inline-block;margin-bottom:6px}
   #view.hubpage .hub-tabs button[aria-pressed="true"]{background:var(--c);border-color:var(--c)}
@@ -52,8 +68,9 @@
     #side .brand{padding:8px 10px;border:0;flex:none;display:flex}
     #side .brand .logo{width:34px;height:34px;border-radius:9px}
     #side .brand b,#side .brand span span{display:none}
-    #side nav{flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px 6px 0;gap:4px;margin:0}
-    #side nav button{white-space:nowrap;padding:8px 12px}
+    #side nav,body.kids #side nav{flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px 6px 0!important;gap:4px!important;margin:0!important}
+    body.kids .brand{padding:8px 10px!important;border:0!important}
+    #side nav button,body.kids #side nav button{white-space:nowrap!important;padding:8px 12px!important}
     #side .side-foot{display:none}
     #top{position:static!important;padding:8px 16px;min-height:0}
     main{padding:18px 16px 40px}
