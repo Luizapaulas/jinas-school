@@ -38,6 +38,26 @@
   .hub-task .st{font-size:13px;font-weight:700}
   .hub-grade{font:800 22px var(--display);color:var(--red)}
   #who .linkbtn{display:none}
+  /* Capa da Home: texto num painel azul à esquerda, foto inteira à direita sem texto por cima dos rostos */
+  #view .hero{min-height:440px!important;align-items:center!important;background-color:var(--ink)!important;background-size:auto 118%!important;background-position:right bottom!important;background-repeat:no-repeat!important}
+  #view .hero:before{background:linear-gradient(90deg,var(--ink) 0,var(--ink) calc(100% - 520px),rgba(20,33,61,.55) calc(100% - 430px),rgba(20,33,61,0) calc(100% - 330px))!important}
+  #view .hero-in{max-width:min(540px,calc(100% - 470px))!important;padding:40px 44px!important}
+  #view .hero .kick{background:none!important;padding:0!important;color:var(--gold)!important;letter-spacing:.03em!important;text-transform:none!important;font-size:14px!important}
+  #view .hero h1{font-size:clamp(32px,3.3vw,46px)!important;line-height:1.06!important;margin:10px 0 14px!important}
+  #view .hero h1 em{display:block}
+  #view .hero p{font-size:16px!important;line-height:1.55!important;color:#e9edf5!important}
+  @media (max-width:1180px) and (min-width:861px){
+    #view .hero{background-size:auto 100%!important}
+    #view .hero:before{background:linear-gradient(90deg,var(--ink) 0,var(--ink) calc(100% - 430px),rgba(20,33,61,.5) calc(100% - 360px),rgba(20,33,61,0) calc(100% - 280px))!important}
+    #view .hero-in{max-width:calc(100% - 380px)!important;padding:32px!important}
+    #view .hero h1 em{display:inline}
+  }
+  @media (max-width:860px){
+    #view .hero{min-height:0!important;align-items:flex-end!important;background-size:100% auto!important;background-position:center top!important;padding-top:calc(100vw - 60px)!important}
+    #view .hero:before{background:linear-gradient(180deg,rgba(20,33,61,0) 0,rgba(20,33,61,0) calc(100vw - 150px),var(--ink) calc(100vw - 50px))!important}
+    #view .hero-in{max-width:none!important;padding:0 22px 24px!important}
+    #view .hero h1 em{display:inline}
+  }
   /* Turmas infantis: o conteúdo continua com o visual infantil, mas a moldura (menu e barra) fica igual às outras turmas */
   @media (min-width:861px){
     body.kids #side{position:fixed!important;inset:var(--sbh,0) auto 0 0!important;width:var(--side)!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;background:var(--ink)!important;color:#fff!important;padding:0!important;overflow:auto!important}
