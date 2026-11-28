@@ -89,20 +89,24 @@ input:focus,select:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3
 .me .who b{display:block;font-size:14px}
 .me .who span{font-size:12.5px;color:var(--mut)}
 main{max-width:1120px;margin:0 auto;padding:30px 24px 72px}
+.hello{border-radius:22px;padding:24px 28px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:linear-gradient(120deg,#1d3557,var(--ink))}
 .hello h1{font-size:clamp(28px,4vw,38px)}
-.hello p{color:var(--mut);margin-top:6px}
+.hello p{color:#fff;opacity:.88;margin-top:6px}
+.hello .kick{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:4px 12px;font:600 12px var(--display);letter-spacing:.06em;margin-bottom:8px}
+.hello img{margin-left:auto;width:74px;height:84px;object-fit:contain;background:#fff;border-radius:16px;padding:6px}
 .tabs{display:flex;gap:4px;margin:26px 0 22px;border-bottom:1.5px solid var(--line);overflow-x:auto;scrollbar-width:none}
 .tabs button{border:0;background:none;padding:12px 14px;font:600 15px var(--display);color:var(--mut);border-bottom:3px solid transparent;margin-bottom:-1.5px;white-space:nowrap;display:flex;gap:8px;align-items:center}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
 .tabs .count{background:#efe8dc;color:var(--ink);border-radius:999px;padding:1px 8px;font:600 12px var(--body)}
 .classes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;margin-top:26px}
-.class{display:grid;grid-template-rows:200px auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+.class{display:grid;grid-template-rows:auto auto;background:var(--card);border:1px solid var(--line);border-top:6px solid var(--c,#1d3557);border-radius:16px;overflow:hidden;
   text-decoration:none;color:var(--ink);transition:box-shadow .2s,transform .2s}
 .class:hover{box-shadow:0 14px 40px -18px rgba(20,33,61,.45);transform:translateY(-2px)}
-.class .ph{position:relative;background-size:cover;background-position:center 30%}
-.class.es .ph{background-position:center 22%}
-.class .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.35))}
-.class .tag{position:absolute;left:16px;bottom:14px;z-index:1;background:var(--gold);color:var(--ink);border-radius:999px;padding:4px 12px;font:700 13.5px var(--display)}
+.class .ph{position:relative;min-height:118px;padding:20px 22px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;overflow:hidden;
+  background:linear-gradient(120deg,var(--c,#1d3557),var(--ink))}
+.class .ph::after{content:"";position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:var(--bgimg) center/cover;opacity:.35}
+.class .tag{position:relative;z-index:1;align-self:flex-start;background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:4px 12px;font:600 12.5px var(--display);letter-spacing:.04em}
+.class .phh{position:relative;z-index:1;font:700 26px/1.15 var(--display);margin-top:8px}
 .class .body{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center;padding:18px 20px 20px}
 .class .mark{grid-row:span 2;width:54px;height:54px;border-radius:14px;background:#f6f2ea;display:grid;place-items:center}
 .class .mark img{width:44px;height:44px;object-fit:contain}
@@ -110,9 +114,9 @@ main{max-width:1120px;margin:0 auto;padding:30px 24px 72px}
 .class .desc{color:var(--mut);font-size:14.5px}
 .class .go{grid-column:1/-1;margin-top:14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:14px;font:600 15px var(--display);color:var(--red2)}
 .class .go svg{transition:transform .2s}.class:hover .go svg{transform:translateX(4px)}
-.empty{background:var(--card);border:1.5px dashed var(--line);border-radius:var(--r-lg);padding:36px 24px;text-align:center;max-width:560px}
+.empty{background:var(--card);border:1px solid var(--line);border-top:6px solid #1d3557;border-radius:16px;padding:36px 24px;text-align:center;max-width:560px}
 .empty h2{font-size:20px;margin-bottom:6px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
+.panel{background:var(--card);border:1px solid var(--line);border-top:6px solid #1d3557;border-radius:16px;padding:24px}
 .panel h2{font-size:22px;margin-bottom:4px}
 .panel > p.muted{margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
@@ -169,7 +173,7 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
   main{padding:22px 16px 60px}
   .bar .in{padding:10px 16px}
   .panel{padding:18px}
-  .class{grid-template-rows:150px auto}
+  .class{grid-template-rows:auto auto}
 }
 </style>
 </head>
@@ -246,7 +250,7 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
   </div></header>
 
   <main>
-    <div class="hello"><h1 id="hello"></h1><p id="hello-sub"></p></div>
+    <div class="hello"><div style="min-width:0"><span class="kick" id="hello-kick">Jinas School</span><h1 id="hello"></h1><p id="hello-sub"></p></div><img src="assets/logo-jinas.png" alt=""></div>
 
     <nav class="tabs hidden" id="tabs" role="tablist" aria-label="Seções">
       <button role="tab" data-tab="classes" aria-selected="true">Turmas</button>
@@ -327,6 +331,8 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
     "younger-one": "Younger One", "younger-two": "Younger Two", "younger-three": "Younger Three", "basic-one": "Basic One",
     "basic-two": "Basic Two", "intermediate": "Intermediate", "advanced": "Advanced", "master": "Advanced C1" };
   const ROLES = { student: "Aluno(a)", teacher: "Professor(a)", admin: "Administração" };
+  const EN_COLORS = { "babies-one": "#e76f51", "babies-two": "#3a86ff", "juniors-one": "#ff6b35", "juniors-two": "#3a86ff", "younger-one": "#0ea5e9", "younger-two": "#7c3aed",
+    "younger-three": "#e11d48", "basic-one": "#1b4f9c", "basic-two": "#0b6e99", "intermediate": "#2e7d32", "advanced": "#1565c0", "master": "#7b1f3a" };
   const SITE_URL = location.origin + location.pathname.replace(/index\.html$/, "");
 
   if (!sb) { $("#setup").classList.remove("hidden"); return; }
@@ -426,6 +432,7 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
     const name = ME.full_name || ME.email || "";
     $("#hello").textContent = "Olá, " + (name.split(" ")[0] || "aluno") + "!";
     $("#me-name").textContent = name; $("#me-role").textContent = ROLES[ME.role] || "";
+    $("#hello-kick").textContent = "Jinas School · " + (ROLES[ME.role] || "");
     $("#me-initials").textContent = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "J";
     STAFF = ME.role === "teacher" || ME.role === "admin";
     await drawClasses();
@@ -435,11 +442,12 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
   const arrow = '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   async function drawClasses() {
     const box = $("#classes"); box.innerHTML = "";
-    const card = (cls, href, photo, mark, title, tag, desc, go) => {
+    const card = (cls, href, photo, mark, title, tag, desc, go, color) => {
       const a = document.createElement("a"); a.className = "class " + cls; a.href = href;
-      a.innerHTML = `<div class="ph" style="background-image:url(${photo})"><span class="tag"></span></div>
+      a.style.setProperty("--c", color || (cls === "es" ? "#c8361f" : "#1d3557")); a.style.setProperty("--bgimg", `url(${photo})`);
+      a.innerHTML = `<div class="ph"><span class="tag"></span><span class="phh"></span></div>
         <div class="body"><span class="mark"><img src="${mark}" alt=""></span><h2></h2><p class="desc"></p><span class="go"><span></span>${arrow}</span></div>`;
-      a.querySelector(".tag").textContent = tag; a.querySelector("h2").textContent = title;
+      a.querySelector(".tag").textContent = tag; a.querySelector(".phh").textContent = title; a.querySelector("h2").textContent = cls === "es" ? "Español" : "English";
       a.querySelector(".desc").textContent = desc; a.querySelector(".go span").textContent = go;
       box.appendChild(a);
     };
@@ -451,7 +459,7 @@ code{background:#fff3c4;border-radius:6px;padding:1px 6px;font-size:.92em}
     }
     const { data: esDoc } = await sb.from("site_docs").select("data").eq("site", "espanol").eq("path", "students/" + ME.id).maybeSingle();
     const esLevel = esDoc && esDoc.data && esDoc.data.level;
-    if (ME.en_level) card("en", "english/index.html", "assets/photo-english.jpg", "assets/logo-jinas.png", "English w/ School", EN_LEVELS[ME.en_level] || "Minha turma", "Aulas com áudio, vocabulário, leitura e exercícios.", "Continuar estudando");
+    if (ME.en_level) card("en", "english/index.html", "assets/photo-english.jpg", "assets/logo-jinas.png", "English w/ School", EN_LEVELS[ME.en_level] || "Minha turma", "Aulas com áudio, vocabulário, leitura e exercícios.", "Continuar estudando", EN_COLORS[ME.en_level]);
     if (esLevel) card("es", "espanol/index.html", "assets/photo-espanol.jpg", "assets/logo-jinas.png", "Español con School", "Nível " + esLevel, "Unidades, verbos, gramática e simulados DELE.", "Continuar estudando");
     const n = box.children.length;
     if (!n) {

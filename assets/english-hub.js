@@ -38,6 +38,11 @@
   .hub-task .st{font-size:13px;font-weight:700}
   .hub-grade{font:800 22px var(--display);color:var(--red)}
   #who .linkbtn{display:none}
+  #view.hubpage .card,#view.hubpage .news,#view.hubpage .ex{border-top:6px solid var(--c);border-radius:16px}
+  #view.hubpage .uhead .kick{display:inline-block;margin-bottom:6px}
+  #view.hubpage .hub-tabs button[aria-pressed="true"]{background:var(--c);border-color:var(--c)}
+  #view.hubpage .hub-grade{color:var(--c)}
+  #view.hubpage .badge.hub-badge{margin-top:6px}
   .level.hub-mine{box-shadow:0 0 0 3px var(--gold);order:-1}
   .hub-badge{align-self:flex-start;margin-top:4px}
   @media (max-width:860px){
@@ -211,8 +216,38 @@
     return `<div class="card"><h2>This class is not part of your path</h2><p>Your class is <b>${esc(lvName(f.level))}</b>.</p><button class="btn" data-go="${esc(f.level)}">Go to my class</button></div>`;
   };
 
+  // ---------------- Padrão visual das unidades em todas as páginas ----------------
+  // Toda página que não é unidade ganha o mesmo cabeçalho colorido das unidades
+  // (faixa com a cor da turma, etiqueta, título e ilustração) e cartões com a borda da turma.
+  const PAGE = {
+    levels: ["My Classes", "book"], board: ["Class Board", "heart"], tasks: ["Assignments", "pencil"], grades: ["My Grades", "star"],
+    verbs: ["Verb Practice", "speaker"], grammar: ["Grammar", "book"], media: ["Videos & Music", "tv"], calendar: ["Calendar", "calendar"],
+    news: ["News Board", "camera"], words: ["Word Finder", "globe"], families: ["Families", "house"], contact: ["Contact", "phonebox"], desk: ["Teacher Desk", "paperclip"]
+  };
+  function classColor() {
+    const lv = !staff() && ACC.family && ACC.family.level;
+    return (lv && LV[lv] && LV[lv].color) || "#1d3557";
+  }
+  function bannerize(h) {
+    const view = $("#view"); if (!view) return;
+    const info = PAGE[h]; view.classList.toggle("hubpage", !!info);
+    view.style.setProperty("--c", classColor());
+    if (!info || view.querySelector(".uhead, .hero")) return;
+    const h1 = view.querySelector("h1"); if (!h1) return;
+    const lead = h1.nextElementSibling && h1.nextElementSibling.matches("p.note, p") ? h1.nextElementSibling : null;
+    const lv = !staff() && ACC.family && ACC.family.level;
+    const kick = (lv ? lvName(lv) : staff() ? (ACC.role === "mgmt" ? "Management" : "Teachers") : "English w/ School") + " · " + info[0];
+    const head = document.createElement("div"); head.className = "uhead";
+    head.innerHTML = `<div style="min-width:0"><span class="kick"></span><h1></h1>${lead ? '<p style="margin:6px 0 0;opacity:.9"></p>' : ""}</div><div style="margin-left:auto" aria-hidden="true">${typeof svg === "function" ? svg(info[1], 86) : ""}</div>`;
+    head.querySelector(".kick").textContent = kick;
+    head.querySelector("h1").textContent = h1.textContent;
+    if (lead) { head.querySelector("p").innerHTML = lead.innerHTML; lead.remove(); }
+    h1.replaceWith(head);
+  }
+
   const afterHooks = [];
   function after(h) {
+    bannerize(h);
     if (h === "levels" || h === "home") myClassFirst();
     afterHooks.forEach(f => { try { f(h); } catch (e) { console.warn(e); } });
     if (!["board", "tasks", "grades", "news", "desk"].includes(h) || !db()) return;
